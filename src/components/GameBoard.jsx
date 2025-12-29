@@ -175,7 +175,7 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
     const expression = style.expression
     
     // Calculate angle for head
-    const angle = Math.atan2(endY - startY, endX - startX) * 180 / Math.PI
+    const angle = Math.atan2(endY - startY, endX - startX) * 45 / Math.PI
     
     return { 
       path, 
