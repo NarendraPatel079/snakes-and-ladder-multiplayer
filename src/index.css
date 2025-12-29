@@ -21,3 +21,44 @@ body {
     text-wrap: balance;
   }
 }
+
+/* Custom animations for game board */
+@keyframes snake-slide {
+  0%, 100% {
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dashoffset: 10;
+  }
+}
+
+@keyframes ladder-climb {
+  0%, 100% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+/* Smooth transitions for interactive cells */
+.game-cell {
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.game-cell:hover {
+  transform: scale(1.1);
+  z-index: 10;
+}
+
+/* Player pulse animation */
+@keyframes player-pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 0.9;
+  }
+}

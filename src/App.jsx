@@ -107,6 +107,7 @@ function App() {
                 <GameBoard
                   players={players}
                   currentPlayerIndex={currentPlayerIndex}
+                  winner={winner}
                 />
               </div>
 
