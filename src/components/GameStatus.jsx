@@ -1,6 +1,6 @@
 import { ICONS_MAP } from "../constants/GameBoardConstants"
 
-const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winner }) => {
+const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winner, extraTurn }) => {
   if (winner) {
     return (
       <div className="p-6 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl shadow-lg text-center animate-pulse">
@@ -30,6 +30,13 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
             {players[currentPlayerIndex]?.name}
           </span>
         </p>
+        {extraTurn && (
+          <div className="mt-2 p-2 bg-yellow-400 bg-opacity-80 rounded-lg animate-pulse">
+            <p className="text-sm font-bold text-gray-900">
+              🎲 Rolled a 6! Extra turn! 🎲
+            </p>
+          </div>
+        )}
       </div>
 
       {lastMove && lastDiceValue > 0 && (

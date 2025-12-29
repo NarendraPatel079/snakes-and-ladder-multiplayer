@@ -16,6 +16,7 @@ function App() {
   const [isRolling, setIsRolling] = useState(false)
   const [lastMove, setLastMove] = useState(null)
   const [winner, setWinner] = useState(null)
+  const [extraTurn, setExtraTurn] = useState(false) // Track if player got a 6 and has extra turn
 
   const handleStartGame = (gamePlayers) => {
     setPlayers(gamePlayers)
@@ -24,6 +25,7 @@ function App() {
     setDiceValue(0)
     setLastMove(null)
     setWinner(null)
+    setExtraTurn(false)
   }
 
   const handleRollDice = () => {
@@ -65,9 +67,17 @@ function App() {
       if (result.type === 'win') {
         setWinner(currentPlayer)
         setGameState('finished')
+        setExtraTurn(false)
       } else {
-        // Move to next player
-        setCurrentPlayerIndex((prev) => (prev + 1) % players.length)
+        // Check if player rolled a 6 - they get an extra turn
+        if (finalValue === 6) {
+          setExtraTurn(true)
+          // Don't move to next player - same player gets another turn
+        } else {
+          // Move to next player only if not a 6
+          setExtraTurn(false)
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length)
+        }
       }
     }, 1500)
   }
@@ -79,6 +89,7 @@ function App() {
     setDiceValue(0)
     setLastMove(null)
     setWinner(null)
+    setExtraTurn(false)
   }
 
   return (
@@ -130,6 +141,7 @@ function App() {
                     lastDiceValue={lastMove?.diceValue || 0}
                     lastMove={lastMove}
                     winner={winner}
+                    extraTurn={extraTurn}
                   />
                 </div>
 
