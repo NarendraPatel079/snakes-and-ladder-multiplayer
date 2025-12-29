@@ -28,15 +28,23 @@ export const LADDERS = [
   [80, 100],
 ]
 
-// Get position coordinates on board (x, y) where 1 is top-left, 100 is bottom-left
+// Get position coordinates on board (x, y) where 1 is bottom-left, 100 is top-left
+// Traditional snakes and ladders: start at bottom, zigzag up to top
 export const getPositionCoords = (position) => {
   const row = Math.floor((position - 1) / 10)
   const col = (position - 1) % 10
   
-  // Zigzag pattern: odd rows go left to right, even rows go right to left
+  // Reverse row so position 1 is at bottom (row 9) and 100 is at top (row 0)
+  const reversedRow = 9 - row
+  
+  // Zigzag pattern: 
+  // Bottom row (row 9): left to right (1-10)
+  // Next row (row 8): right to left (11-20)
+  // And so on...
+  // Top row (row 0): depends on whether it's even or odd
   const isOddRow = row % 2 === 0
   const x = isOddRow ? col : 9 - col
-  const y = row
+  const y = reversedRow
   
   return { x, y }
 }
