@@ -33,7 +33,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
         {extraTurn && (
           <div className="mt-2 p-2 bg-yellow-400 bg-opacity-80 rounded-lg animate-pulse">
             <p className="text-sm font-bold text-gray-900">
-              🎲 Rolled a 6! Extra turn! 🎲
+              {`${ICONS_MAP.dice} Rolled a 6! Extra turn! ${ICONS_MAP.dice}`}
             </p>
           </div>
         )}

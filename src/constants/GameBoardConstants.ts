@@ -5,6 +5,7 @@ export const ICONS_MAP = {
     'player': '👥',
     'snake': '🐍',
     'ladder': '🪜',
+    'dice': '🎲',
     'up': '↑',
     'down': '↓',
 };
