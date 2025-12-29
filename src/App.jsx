@@ -6,6 +6,7 @@ import GameBoard from './components/GameBoard'
 import Dice from './components/Dice'
 import GameStatus from './components/GameStatus'
 import { movePlayer, rollDice } from './utils/gameLogic'
+import { ICONS_MAP } from './constants/GameBoardConstants'
 
 function App() {
   const [gameState, setGameState] = useState('setup') // 'setup', 'playing', 'finished'
@@ -88,7 +89,7 @@ function App() {
           <header className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                🐍 Snake & Ladder 🪜
+                {`${ICONS_MAP.snake} Snake & Ladder ${ICONS_MAP.ladder}`}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Multiplayer Board Game
@@ -118,6 +119,7 @@ function App() {
                     value={diceValue}
                     isRolling={isRolling}
                     onRoll={handleRollDice}
+                    winner={winner}
                   />
                 </div>
 

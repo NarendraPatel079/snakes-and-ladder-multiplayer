@@ -1,3 +1,5 @@
+import { ICONS_MAP } from "../constants/GameBoardConstants"
+
 const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winner }) => {
   if (winner) {
     return (
@@ -41,7 +43,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
               <span className="ml-2">
                 {' '}
                 and{' '}
-                {lastMove.snakeOrLadder.type === 'snake' ? '🐍' : '🪜'}{' '}
+                {lastMove.snakeOrLadder.type === 'snake' ? ICONS_MAP.snake : ICONS_MAP.ladder}{' '}
                 {lastMove.snakeOrLadder.type === 'snake'
                   ? 'slid down'
                   : 'climbed up'}{' '}

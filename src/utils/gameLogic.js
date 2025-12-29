@@ -1,31 +1,4 @@
-import { BOARD_SIZE } from "../constants/GameBoardConstants"
-
-// Snakes configuration [top, bottom]
-export const SNAKES = [
-  [16, 6],
-  [46, 25],
-  [49, 11],
-  [78, 19],
-  [64, 60],
-  [74, 53],
-  [89, 68],
-  [92, 88],
-  [95, 75],
-  [99, 80],
-]
-
-// Ladders configuration [bottom, top]
-export const LADDERS = [
-  [2, 38],
-  [4, 14],
-  [9, 31],
-  [21, 42],
-  [28, 84],
-  [36, 44],
-  [51, 67],
-  [71, 91],
-  [80, 100],
-]
+import { BOARD_SIZE, LADDERS, SNAKES } from "../constants/GameBoardConstants"
 
 // Get position coordinates on board (x, y) where 1 is bottom-left, 100 is top-left
 // Traditional snakes and ladders: start at bottom, zigzag up to top
@@ -67,7 +40,7 @@ export const getSnakeOrLadder = (position) => {
 export const movePlayer = (currentPosition, diceValue) => {
   let newPosition = currentPosition + diceValue
   
-  // Check if player wins
+  // Check if player wins (exact roll to 100)
   if (newPosition === BOARD_SIZE) {
     return { position: BOARD_SIZE, type: 'win', snakeOrLadder: null }
   }
@@ -81,6 +54,16 @@ export const movePlayer = (currentPosition, diceValue) => {
   const snakeOrLadder = getSnakeOrLadder(newPosition)
   if (snakeOrLadder) {
     newPosition = snakeOrLadder.to
+    
+    // Check if the final position after ladder/snake is 100 (win condition)
+    if (newPosition === BOARD_SIZE) {
+      return { 
+        position: BOARD_SIZE, 
+        type: 'win', 
+        snakeOrLadder 
+      }
+    }
+    
     return { 
       position: newPosition, 
       type: snakeOrLadder.type, 

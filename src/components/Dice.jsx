@@ -1,4 +1,4 @@
-const Dice = ({ value, isRolling, onRoll }) => {
+const Dice = ({ value, isRolling, onRoll, winner }) => {
   const getDiceFace = (value) => {
     const dots = {
       1: [[0, 0, 0], [0, 1, 0], [0, 0, 0]],
@@ -40,7 +40,7 @@ const Dice = ({ value, isRolling, onRoll }) => {
       
       <button
         onClick={onRoll}
-        disabled={isRolling}
+        disabled={winner || isRolling}
         className={`px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none ${
           isRolling ? 'animate-pulse' : ''
         }`}

@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
-import { getPositionCoords, SNAKES, LADDERS } from '../utils/gameLogic'
-import { BOARD_SIZE, BOARD_CELL_SIZE, BOARD_PADDING, ICONS_MAP } from '../constants/GameBoardConstants'
+import { getPositionCoords } from '../utils/gameLogic'
+import { BOARD_SIZE, BOARD_CELL_SIZE, BOARD_PADDING, ICONS_MAP, SNAKES, LADDERS } from '../constants/GameBoardConstants'
 
 const GameBoard = ({ players, currentPlayerIndex, winner }) => {
   const [hoveredCell, setHoveredCell] = useState(null)
@@ -71,7 +71,7 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
       transition: 'all 0.2s ease',
       fontWeight: '600',
       fontSize: '12px',
-      zIndex: 3,
+      zIndex: 1,
       background: backgroundColor,
       color: isEvenCell 
         ? (isDarkMode ? '#cbd5e1' : '#475569')
@@ -248,16 +248,35 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
 
   // Get the hover tooltip message for the cell
   const getHoverTooltipMessage = ({ position, snakeOrLadder, playersHere }) => {
-    const direction = snakeOrLadder?.type !== 'snake' && position === snakeOrLadder?.from ? ICONS_MAP.up : ICONS_MAP.down;
+    let direction = ICONS_MAP.down;
+    let toPosition = snakeOrLadder?.to;
+    if (snakeOrLadder?.type !== 'snake') {
+      if (position === snakeOrLadder?.to) {
+        toPosition = snakeOrLadder?.from;
+      } else {
+        direction = ICONS_MAP.up;
+      }
+    } else if (snakeOrLadder?.type === 'snake') {
+      if (position === snakeOrLadder?.to) {
+        direction = ICONS_MAP.up;
+        toPosition = snakeOrLadder?.from;
+      }
+    }
+    let topStyle = '-top-8';
+    if (snakeOrLadder && playersHere.length > 0) {
+      topStyle = '-top-16';
+    } else if (snakeOrLadder || playersHere.length > 0) {
+      topStyle = '-top-12';
+    }
     return hoveredCell === position ? (
       <div
-        className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none shadow-lg"
+        className={`absolute left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none shadow-lg ${topStyle}`}
         style={{ zIndex: 20 }}
       >
         <div className="font-bold">Position {position}</div>
         {snakeOrLadder && (
           <div className="block text-yellow-300 mt-1">
-            {snakeOrLadder.type === 'snake' ? `${ICONS_MAP.snake} ${direction} Snake` : `${ICONS_MAP.ladder} ${direction} Ladder`} → {snakeOrLadder.to}
+            {snakeOrLadder.type === 'snake' ? `${ICONS_MAP.snake} ${direction} Snake` : `${ICONS_MAP.ladder} ${direction} Ladder`} → {toPosition}
           </div>
         )}
         {playersHere.length > 0 && (
@@ -286,17 +305,17 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
           top: '45px',
           left: '45px',
         }}>
-          {/* SVG Layer for Snakes and Ladders - rendered above cells so paths are visible */}
-          <svg
-            width={10 * BOARD_CELL_SIZE + BOARD_PADDING * 2}
-            height={10 * BOARD_CELL_SIZE + BOARD_PADDING * 2}
-            className="absolute pointer-events-none"
-            style={{ 
-              zIndex: 4,
-              top: 0,
-              left: 0
-            }}
-          >
+            {/* SVG Layer for Snakes and Ladders - rendered above cells so paths are visible */}
+            <svg
+              width={10 * BOARD_CELL_SIZE + BOARD_PADDING * 2}
+              height={10 * BOARD_CELL_SIZE + BOARD_PADDING * 2}
+              className="absolute pointer-events-none"
+              style={{ 
+                zIndex: 2,
+                top: 0,
+                left: 0
+              }}
+            >
             {/* Draw Enhanced Cartoon Snakes */}
             {SNAKES.map(([top, bottom], index) => {
               const snake = renderCartoonSnake(top, bottom, index)
@@ -791,16 +810,35 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
                 onMouseEnter={() => setHoveredCell(position)}
                 onMouseLeave={() => setHoveredCell(null)}
                 className="group game-cell"
-                title={
-                  snakeOrLadder
-                    ? `${snakeOrLadder.type === 'snake' ? 'Snake' : 'Ladder'}: ${snakeOrLadder.from} → ${snakeOrLadder.to}`
-                    : `Position ${position}`
-                }
               >
                 {/* Cell number */}
                 <span className="relative z-0">{position}</span>
 
-                {/* Interactive Player Icons - matching snake design */}
+                {/* Hover tooltip */}
+                {getHoverTooltipMessage({ position, snakeOrLadder, playersHere })}
+              </div>
+            )
+          })}
+
+          {/* Player Icons Layer - rendered separately above everything */}
+          {boardGrid.map(({ position, x, y }) => {
+            const playersHere = getPlayersAtPosition(position)
+            
+            if (playersHere.length === 0) return null
+            
+            return (
+              <div
+                key={`players-${position}`}
+                className="absolute"
+                style={{
+                  left: `${BOARD_PADDING + x * BOARD_CELL_SIZE}px`,
+                  top: `${BOARD_PADDING + y * BOARD_CELL_SIZE}px`,
+                  width: `${BOARD_CELL_SIZE}px`,
+                  height: `${BOARD_CELL_SIZE}px`,
+                  zIndex: 10,
+                  pointerEvents: 'none',
+                }}
+              >
                 {playersHere.map((player, playerIndex) => {
                   const offsetX = (playerIndex % 2 === 0 ? -1 : 1) * (BOARD_CELL_SIZE * 0.2)
                   const offsetY = Math.floor(playerIndex / 2) * (BOARD_CELL_SIZE * 0.2)
@@ -1008,9 +1046,6 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
                     </svg>
                   )
                 })}
-
-                {/* Hover tooltip */}
-                {getHoverTooltipMessage({ position, snakeOrLadder, playersHere })}
               </div>
             )
           })}
