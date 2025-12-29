@@ -1,12 +1,11 @@
-// Game board configuration - 10x10 grid (1-100)
-export const BOARD_SIZE = 100
+import { BOARD_SIZE } from "../constants/GameBoardConstants"
 
 // Snakes configuration [top, bottom]
 export const SNAKES = [
   [16, 6],
   [46, 25],
   [49, 11],
-  [62, 19],
+  [78, 19],
   [64, 60],
   [74, 53],
   [89, 68],

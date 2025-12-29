@@ -33,11 +33,11 @@ const Dice = ({ value, isRolling, onRoll }) => {
           )}
         </div>
       </div>
-      {!isRolling && value > 0 && (
-        <div className="text-2xl font-bold text-gray-900 dark:text-white">
-          {value}
-        </div>
-      )}
+      
+      <div className={`text-2xl font-bold text-gray-900 text-center dark:text-white ${isRolling ? 'min-w-8 min-h-8 p-1 mt-2 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse' : ''}`}>
+        {`${!isRolling && value > 0 ? value : ''}`}
+      </div>
+      
       <button
         onClick={onRoll}
         disabled={isRolling}

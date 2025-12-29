@@ -18,7 +18,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
+      <div className="p-4 bg-gradient-to-r from-teal-400 to-teal-500 rounded-lg shadow-md">
         <p className="text-white font-semibold text-lg">
           Current Turn:{' '}
           <span
