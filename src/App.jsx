@@ -6,27 +6,31 @@ import GameBoard from './components/GameBoard'
 import Dice from './components/Dice'
 import GameStatus from './components/GameStatus'
 import { movePlayer, rollDice } from './utils/gameLogic'
+import { ICONS_MAP } from './constants/GameBoardConstants'
+import { GAME_STATE } from './constants/PlayerConstants'
 
 function App() {
-  const [gameState, setGameState] = useState('setup') // 'setup', 'playing', 'finished'
+  const [gameState, setGameState] = useState(GAME_STATE.setup)
   const [players, setPlayers] = useState([])
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [diceValue, setDiceValue] = useState(0)
   const [isRolling, setIsRolling] = useState(false)
   const [lastMove, setLastMove] = useState(null)
   const [winner, setWinner] = useState(null)
+  const [extraTurn, setExtraTurn] = useState(false) // Track if player got a 6 and has extra turn
 
   const handleStartGame = (gamePlayers) => {
     setPlayers(gamePlayers)
-    setGameState('playing')
+    setGameState(GAME_STATE.playing)
     setCurrentPlayerIndex(0)
     setDiceValue(0)
     setLastMove(null)
     setWinner(null)
+    setExtraTurn(false)
   }
 
   const handleRollDice = () => {
-    if (isRolling || gameState !== 'playing') return
+    if (isRolling || gameState !== GAME_STATE.playing) return
 
     setIsRolling(true)
     setDiceValue(0)
@@ -63,21 +67,30 @@ function App() {
       // Check for win
       if (result.type === 'win') {
         setWinner(currentPlayer)
-        setGameState('finished')
+        setGameState(GAME_STATE.finished)
+        setExtraTurn(false)
       } else {
-        // Move to next player
-        setCurrentPlayerIndex((prev) => (prev + 1) % players.length)
+        // Check if player rolled a 6 - they get an extra turn
+        if (finalValue === 6) {
+          setExtraTurn(true)
+          // Don't move to next player - same player gets another turn
+        } else {
+          // Move to next player only if not a 6
+          setExtraTurn(false)
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length)
+        }
       }
     }, 1500)
   }
 
   const handleNewGame = () => {
-    setGameState('setup')
+    setGameState(GAME_STATE.setup)
     setPlayers([])
     setCurrentPlayerIndex(0)
     setDiceValue(0)
     setLastMove(null)
     setWinner(null)
+    setExtraTurn(false)
   }
 
   return (
@@ -88,7 +101,7 @@ function App() {
           <header className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                🐍 Snake & Ladder 🪜
+                {`${ICONS_MAP.snake} Snake & Ladder ${ICONS_MAP.ladder}`}
               </h1>
               <p className="text-gray-600 dark:text-gray-400">
                 Multiplayer Board Game
@@ -98,7 +111,7 @@ function App() {
           </header>
 
           {/* Main Content */}
-          {gameState === 'setup' ? (
+          {gameState === GAME_STATE.setup ? (
             <PlayerSetup onStartGame={handleStartGame} />
           ) : (
             <div className="grid lg:grid-cols-3 gap-6">
@@ -118,6 +131,7 @@ function App() {
                     value={diceValue}
                     isRolling={isRolling}
                     onRoll={handleRollDice}
+                    winner={winner}
                   />
                 </div>
 
@@ -128,6 +142,7 @@ function App() {
                     lastDiceValue={lastMove?.diceValue || 0}
                     lastMove={lastMove}
                     winner={winner}
+                    extraTurn={extraTurn}
                   />
                 </div>
 

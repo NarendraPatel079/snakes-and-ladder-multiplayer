@@ -1,4 +1,6 @@
-const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winner }) => {
+import { ICONS_MAP } from "../constants/GameBoardConstants"
+
+const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winner, extraTurn }) => {
   if (winner) {
     return (
       <div className="p-6 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-xl shadow-lg text-center animate-pulse">
@@ -18,7 +20,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-md">
+      <div className="p-4 bg-gradient-to-r from-teal-400 to-teal-500 rounded-lg shadow-md">
         <p className="text-white font-semibold text-lg">
           Current Turn:{' '}
           <span
@@ -28,6 +30,13 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
             {players[currentPlayerIndex]?.name}
           </span>
         </p>
+        {extraTurn && (
+          <div className="mt-2 p-2 bg-yellow-400 bg-opacity-80 rounded-lg animate-pulse">
+            <p className="text-sm font-bold text-gray-900">
+              {`${ICONS_MAP.dice} Rolled a 6! Extra turn! ${ICONS_MAP.dice}`}
+            </p>
+          </div>
+        )}
       </div>
 
       {lastMove && lastDiceValue > 0 && (
@@ -41,7 +50,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
               <span className="ml-2">
                 {' '}
                 and{' '}
-                {lastMove.snakeOrLadder.type === 'snake' ? '🐍' : '🪜'}{' '}
+                {lastMove.snakeOrLadder.type === 'snake' ? ICONS_MAP.snake : ICONS_MAP.ladder}{' '}
                 {lastMove.snakeOrLadder.type === 'snake'
                   ? 'slid down'
                   : 'climbed up'}{' '}
@@ -55,7 +64,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
         </div>
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
         {players.map((player, index) => (
           <div
             key={index}

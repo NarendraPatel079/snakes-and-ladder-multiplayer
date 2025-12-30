@@ -62,3 +62,26 @@ body {
     opacity: 0.9;
   }
 }
+
+/* Player bounce animation */
+@keyframes player-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Player hover animation */
+@keyframes player-hover {
+  0%, 100% {
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    transform: scale(1.1) rotate(-5deg);
+  }
+  75% {
+    transform: scale(1.1) rotate(5deg);
+  }
+}

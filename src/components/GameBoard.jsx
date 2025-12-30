@@ -1,12 +1,12 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
-import { getPositionCoords, SNAKES, LADDERS, BOARD_SIZE } from '../utils/gameLogic'
+import { getPositionCoords } from '../utils/gameLogic'
+import { BOARD_SIZE, BOARD_CELL_SIZE, BOARD_PADDING, ICONS_MAP, SNAKES, LADDERS } from '../constants/GameBoardConstants'
 
 const GameBoard = ({ players, currentPlayerIndex, winner }) => {
   const [hoveredCell, setHoveredCell] = useState(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const boardRef = useRef(null)
-  const cellSize = 50
-  const padding = 15
+  
 
   // Track dark mode changes
   useEffect(() => {
@@ -58,10 +58,10 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
     
     const baseStyle = {
       position: 'absolute',
-      left: `${padding + x * cellSize}px`,
-      top: `${padding + y * cellSize}px`,
-      width: `${cellSize}px`,
-      height: `${cellSize}px`,
+      left: `${BOARD_PADDING + x * BOARD_CELL_SIZE}px`,
+      top: `${BOARD_PADDING + y * BOARD_CELL_SIZE}px`,
+      width: `${BOARD_CELL_SIZE}px`,
+      height: `${BOARD_CELL_SIZE}px`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -160,10 +160,10 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
     const fromCoords = getPositionCoords(from)
     const toCoords = getPositionCoords(to)
     
-    const startX = padding + fromCoords.x * cellSize + cellSize / 2
-    const startY = padding + fromCoords.y * cellSize + cellSize / 2
-    const endX = padding + toCoords.x * cellSize + cellSize / 2
-    const endY = padding + toCoords.y * cellSize + cellSize / 2
+    const startX = BOARD_PADDING + fromCoords.x * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
+    const startY = BOARD_PADDING + fromCoords.y * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
+    const endX = BOARD_PADDING + toCoords.x * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
+    const endY = BOARD_PADDING + toCoords.y * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
     
     const midX = (startX + endX) / 2
     const midY = (startY + endY) / 2 - 35
@@ -193,15 +193,15 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
 
   // Ladder color schemes
   const ladderStyles = [
-    { color: '#92400e', railWidth: 7, rungWidth: 4 }, // Brown
-    { color: '#dc2626', railWidth: 7, rungWidth: 4 }, // Red
-    { color: '#fbbf24', railWidth: 7, rungWidth: 4 }, // Yellow
-    { color: '#16a34a', railWidth: 7, rungWidth: 4 }, // Green
-    { color: '#92400e', railWidth: 7, rungWidth: 4 }, // Brown
-    { color: '#dc2626', railWidth: 7, rungWidth: 4 }, // Red
-    { color: '#16a34a', railWidth: 7, rungWidth: 4 }, // Green
-    { color: '#fbbf24', railWidth: 7, rungWidth: 4 }, // Yellow
-    { color: '#92400e', railWidth: 7, rungWidth: 4 }, // Brown
+    { color: '#896047', railWidth: 7, rungWidth: 4 }, // Dark Oak
+    { color: '#8396BC', railWidth: 7, rungWidth: 4 }, // Serene Blue
+    { color: '#78746A', railWidth: 7, rungWidth: 4 }, // Romantic Grey
+    { color: '#838D9A', railWidth: 7, rungWidth: 4 }, // Mountain
+    { color: '#896047', railWidth: 7, rungWidth: 4 }, // Dark Oak
+    { color: '#8396BC', railWidth: 7, rungWidth: 4 }, // Serene Blue
+    { color: '#838D9A', railWidth: 7, rungWidth: 4 }, // Mountain
+    { color: '#78746A', railWidth: 7, rungWidth: 4 }, // Romantic Grey
+    { color: '#896047', railWidth: 7, rungWidth: 4 }, // Dark Oak
   ]
 
   // Draw ladder SVG path with proper perpendicular offset for diagonal ladders
@@ -209,10 +209,10 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
     const fromCoords = getPositionCoords(from)
     const toCoords = getPositionCoords(to)
     
-    const startX = padding + fromCoords.x * cellSize + cellSize / 2
-    const startY = padding + fromCoords.y * cellSize + cellSize / 2
-    const endX = padding + toCoords.x * cellSize + cellSize / 2
-    const endY = padding + toCoords.y * cellSize + cellSize / 2
+    const startX = BOARD_PADDING + fromCoords.x * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
+    const startY = BOARD_PADDING + fromCoords.y * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
+    const endX = BOARD_PADDING + toCoords.x * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
+    const endY = BOARD_PADDING + toCoords.y * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2
     
     // Calculate the direction vector
     const dx = endX - startX
@@ -246,584 +246,810 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
     }
   }
 
+  // Get the hover tooltip message for the cell
+  const getHoverTooltipMessage = ({ position, snakeOrLadder, playersHere }) => {
+    let direction = ICONS_MAP.down;
+    let toPosition = snakeOrLadder?.to;
+    if (snakeOrLadder?.type !== 'snake') {
+      if (position === snakeOrLadder?.to) {
+        toPosition = snakeOrLadder?.from;
+      } else {
+        direction = ICONS_MAP.up;
+      }
+    } else if (snakeOrLadder?.type === 'snake') {
+      if (position === snakeOrLadder?.to) {
+        direction = ICONS_MAP.up;
+        toPosition = snakeOrLadder?.from;
+      }
+    }
+    let topStyle = '-top-8';
+    if (snakeOrLadder && playersHere.length > 0) {
+      topStyle = '-top-16';
+    } else if (snakeOrLadder || playersHere.length > 0) {
+      topStyle = '-top-12';
+    }
+    return hoveredCell === position ? (
+      <div
+        className={`absolute left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none shadow-lg ${topStyle}`}
+        style={{ zIndex: 20 }}
+      >
+        <div className="font-bold">Position {position}</div>
+        {snakeOrLadder && (
+          <div className="block text-yellow-300 mt-1">
+            {snakeOrLadder.type === 'snake' ? `${ICONS_MAP.snake} ${direction} Snake` : `${ICONS_MAP.ladder} ${direction} Ladder`} → {toPosition}
+          </div>
+        )}
+        {playersHere.length > 0 && (
+          <div className="block text-blue-300 mt-1">
+            {ICONS_MAP.player} {playersHere.map(p => p.name).join(', ')}
+          </div>
+        )}
+      </div>
+    ) : '';
+  }
+
   return (
     <div className="flex justify-center p-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
       <div 
         ref={boardRef}
         className="relative border-2 border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-900 dark:to-gray-800 shadow-inner"
         style={{
-          width: `${10 * cellSize + padding * 2}px`,
-          height: `${10 * cellSize + padding * 2}px`,
+          width: `${((10 * BOARD_CELL_SIZE + BOARD_PADDING * 2) + 90)}px`,
+          height: `${((10 * BOARD_CELL_SIZE + BOARD_PADDING * 2) + 90)}px`,
           position: 'relative'
         }}
       >
-        {/* SVG Layer for Snakes and Ladders - rendered above cells so paths are visible */}
-        <svg
-          width={10 * cellSize + padding * 2}
-          height={10 * cellSize + padding * 2}
-          className="absolute pointer-events-none"
-          style={{ 
-            zIndex: 4,
-            top: 0,
-            left: 0
-          }}
-        >
-          {/* Draw Enhanced Cartoon Snakes */}
-          {SNAKES.map(([top, bottom], index) => {
-            const snake = renderCartoonSnake(top, bottom, index)
-            const { path, startX, startY, endX, endY, midX, midY, style, expression, angle } = snake
-            
-            // Create gradient ID for each snake
-            const gradientId = `snakeGradient-${index}`
-            
-            return (
-              <g key={`snake-${index}`}>
-                <defs>
-                  {/* Snake body gradient - using gradientUnits for proper scaling */}
-                  <linearGradient 
-                    id={gradientId} 
-                    x1="0%" 
-                    y1="0%" 
-                    x2="100%" 
-                    y2="100%"
-                    gradientUnits="userSpaceOnUse"
-                  >
-                    <stop offset="0%" stopColor={style.body} stopOpacity="1" />
-                    <stop offset="50%" stopColor={style.spots} stopOpacity="1" />
-                    <stop offset="100%" stopColor={style.body} stopOpacity="1" />
-                  </linearGradient>
+        <div style={{
+          width: `${((10 * BOARD_CELL_SIZE + BOARD_PADDING * 2) + 90)}px`,
+          position: 'relative',
+          top: '45px',
+          left: '45px',
+        }}>
+            {/* SVG Layer for Snakes and Ladders - rendered above cells so paths are visible */}
+            <svg
+              width={10 * BOARD_CELL_SIZE + BOARD_PADDING * 2}
+              height={10 * BOARD_CELL_SIZE + BOARD_PADDING * 2}
+              className="absolute pointer-events-none"
+              style={{ 
+                zIndex: 2,
+                top: 0,
+                left: 0
+              }}
+            >
+            {/* Draw Enhanced Cartoon Snakes */}
+            {SNAKES.map(([top, bottom], index) => {
+              const snake = renderCartoonSnake(top, bottom, index)
+              const { path, startX, startY, endX, endY, midX, midY, style, expression, angle } = snake
+              
+              // Create gradient ID for each snake
+              const gradientId = `snakeGradient-${index}`
+              
+              return (
+                <g key={`snake-${index}`}>
+                  <defs>
+                    {/* Snake body gradient - using gradientUnits for proper scaling */}
+                    <linearGradient 
+                      id={gradientId} 
+                      x1="0%" 
+                      y1="0%" 
+                      x2="100%" 
+                      y2="100%"
+                      gradientUnits="userSpaceOnUse"
+                    >
+                      <stop offset="0%" stopColor={style.body} stopOpacity="1" />
+                      <stop offset="50%" stopColor={style.spots} stopOpacity="1" />
+                      <stop offset="100%" stopColor={style.body} stopOpacity="1" />
+                    </linearGradient>
+                    
+                    {/* Snake pattern/stripes gradient */}
+                    <linearGradient id={`snakePattern-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={style.body} stopOpacity="0.3" />
+                      <stop offset="50%" stopColor={style.body} stopOpacity="0.8" />
+                      <stop offset="100%" stopColor={style.body} stopOpacity="0.3" />
+                    </linearGradient>
+                  </defs>
                   
-                  {/* Snake pattern/stripes gradient */}
-                  <linearGradient id={`snakePattern-${index}`} x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor={style.body} stopOpacity="0.3" />
-                    <stop offset="50%" stopColor={style.body} stopOpacity="0.8" />
-                    <stop offset="100%" stopColor={style.body} stopOpacity="0.3" />
-                  </linearGradient>
-                </defs>
-                
-                {/* Main snake body - solid color base layer for visibility */}
-                <path
-                  d={path}
-                  fill="none"
-                  stroke={style.body}
-                  strokeWidth="16"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  style={{
-                    filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5))'
-                  }}
-                />
-                {/* Gradient overlay for depth */}
-                <path
-                  d={path}
-                  fill="none"
-                  stroke={`url(#${gradientId})`}
-                  strokeWidth="14"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                
-                {/* Body segments/rings for texture - positioned on the curved path */}
-                {[0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((t, i) => {
-                  // Get point on the actual curved path
-                  const point = getPointOnQuadraticCurve(t, startX, startY, midX, midY, endX, endY)
+                  {/* Main snake body - solid color base layer for visibility */}
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke={style.body}
+                    strokeWidth="16"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    style={{
+                      filter: 'drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5))'
+                    }}
+                  />
+                  {/* Gradient overlay for depth */}
+                  <path
+                    d={path}
+                    fill="none"
+                    stroke={`url(#${gradientId})`}
+                    strokeWidth="14"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
                   
-                  // Get tangent vector to calculate rotation angle
-                  const tangent = getTangentOnQuadraticCurve(t, startX, startY, midX, midY, endX, endY)
-                  const segmentAngle = Math.atan2(tangent.dy, tangent.dx) * 180 / Math.PI
+                  {/* Body segments/rings for texture - positioned on the curved path */}
+                  {[0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((t, i) => {
+                    // Get point on the actual curved path
+                    const point = getPointOnQuadraticCurve(t, startX, startY, midX, midY, endX, endY)
+                    
+                    // Get tangent vector to calculate rotation angle
+                    const tangent = getTangentOnQuadraticCurve(t, startX, startY, midX, midY, endX, endY)
+                    const segmentAngle = Math.atan2(tangent.dy, tangent.dx) * 180 / Math.PI
+                    
+                    return (
+                      <ellipse
+                        key={`segment-${i}`}
+                        id={`segment-${i}`}
+                        cx={point.x}
+                        cy={point.y}
+                        rx="5"
+                        ry="7"
+                        fill={style.spots}
+                        fillOpacity="0.6"
+                        stroke={style.body}
+                        strokeWidth="1.5"
+                        transform={`rotate(${segmentAngle} ${point.x} ${point.y})`}
+                        style={{
+                          filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))'
+                        }}
+                      />
+                    )
+                  })}
                   
-                  return (
+                  {/* Enhanced snake head with gradient and details */}
+                  <g transform={`translate(${startX}, ${startY}) rotate(${angle})`}>
+                    <defs>
+                      <linearGradient id={`headGradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor={style.body} stopOpacity="1" />
+                        <stop offset="100%" stopColor={style.spots} stopOpacity="0.9" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Head shadow/back layer */}
                     <ellipse
-                      key={`segment-${i}`}
-                      id={`segment-${i}`}
-                      cx={point.x}
-                      cy={point.y}
-                      rx="5"
-                      ry="7"
+                      cx="1"
+                      cy="1"
+                      rx="13"
+                      ry="11"
+                      fill="#1f2937"
+                      fillOpacity="0.2"
+                    />
+                    
+                    {/* Head base with gradient */}
+                    <ellipse
+                      cx="0"
+                      cy="0"
+                      rx="14"
+                      ry="12"
+                      fill={`url(#headGradient-${index})`}
+                      stroke="#1f2937"
+                      strokeWidth="2.5"
+                      style={{
+                        filter: 'drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6))'
+                      }}
+                    />
+                    
+                    {/* Head highlight */}
+                    <ellipse
+                      cx="-4"
+                      cy="-4"
+                      rx="6"
+                      ry="5"
+                      fill="white"
+                      fillOpacity="0.3"
+                    />
+                    
+                    {/* Expression eyes with more detail */}
+                    {expression === 'happy' && (
+                      <>
+                        {/* Eye whites */}
+                        <ellipse cx="-7" cy="-3" rx="4" ry="3" fill="white" stroke="#1f2937" strokeWidth="1.5" />
+                        <ellipse cx="7" cy="-3" rx="4" ry="3" fill="white" stroke="#1f2937" strokeWidth="1.5" />
+                        {/* Eye pupils */}
+                        <circle cx="-7" cy="-3" r="2" fill="#1f2937" />
+                        <circle cx="7" cy="-3" r="2" fill="#1f2937" />
+                        {/* Eye shine */}
+                        <circle cx="-6.5" cy="-3.5" r="0.8" fill="white" />
+                        <circle cx="7.5" cy="-3.5" r="0.8" fill="white" />
+                        {/* Happy eyebrows */}
+                        <path d="M -9 -6 Q -7 -8 -5 -6" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path d="M 5 -6 Q 7 -8 9 -6" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        {/* Smile */}
+                        <path d="M -5 3 Q 0 6 5 3" stroke="#1f2937" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                      </>
+                    )}
+                    
+                    {expression === 'angry' && (
+                      <>
+                        {/* Angry eyebrows */}
+                        <line x1="-8" y1="-7" x2="-5" y2="-5" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round" />
+                        <line x1="8" y1="-7" x2="5" y2="-5" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round" />
+                        {/* Angry eyes */}
+                        <ellipse cx="-7" cy="-3" rx="3.5" ry="2.5" fill="#dc2626" stroke="#1f2937" strokeWidth="1.5" />
+                        <ellipse cx="7" cy="-3" rx="3.5" ry="2.5" fill="#dc2626" stroke="#1f2937" strokeWidth="1.5" />
+                        <line x1="-9" y1="-3" x2="-5" y2="-3" stroke="#1f2937" strokeWidth="2" />
+                        <line x1="9" y1="-3" x2="5" y2="-3" stroke="#1f2937" strokeWidth="2" />
+                        {/* Frown */}
+                        <path d="M -4 4 Q 0 2 4 4" stroke="#1f2937" strokeWidth="2.5" fill="none" strokeLinecap="round" />
+                      </>
+                    )}
+                    
+                    {expression === 'dizzy' && (
+                      <>
+                        {/* Dizzy eye circles */}
+                        <circle cx="-6" cy="-3" r="4" fill="white" stroke="#1f2937" strokeWidth="2" />
+                        <circle cx="6" cy="-3" r="4" fill="white" stroke="#1f2937" strokeWidth="2" />
+                        {/* Spiral eyes */}
+                        <path d="M -6 -3 Q -6 -5 -4 -5 Q -2 -5 -2 -3 Q -2 -1 -4 -1 Q -6 -1 -6 -3" 
+                              stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        <path d="M 6 -3 Q 6 -5 4 -5 Q 2 -5 2 -3 Q 2 -1 4 -1 Q 6 -1 6 -3" 
+                              stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                        {/* Confused mouth */}
+                        <path d="M -3 3 Q 0 5 3 3" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                      </>
+                    )}
+                    
+                    {expression === 'loving' && (
+                      <>
+                        {/* Heart eyes - left */}
+                        <path d="M -6 -5 Q -6 -7 -4 -7 Q -2 -7 -2 -5 Q -2 -3 -4 -1 Q -6 -3 -6 -5" 
+                              fill="#ec4899" stroke="#1f2937" strokeWidth="1.5" />
+                        {/* Heart eyes - right */}
+                        <path d="M 6 -5 Q 6 -7 4 -7 Q 2 -7 2 -5 Q 2 -3 4 -1 Q 6 -3 6 -5" 
+                              fill="#ec4899" stroke="#1f2937" strokeWidth="1.5" />
+                        {/* Heart shine */}
+                        <circle cx="-5" cy="-5" r="1.5" fill="white" fillOpacity="0.7" />
+                        <circle cx="5" cy="-5" r="1.5" fill="white" fillOpacity="0.7" />
+                        {/* Smile */}
+                        <path d="M -4 3 Q 0 6 4 3" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                      </>
+                    )}
+                    
+                    {/* Forked tongue */}
+                    {expression !== 'angry' && (
+                      <g>
+                        <path d="M 0 8 L -3 12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
+                        <path d="M 0 8 L 3 12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
+                      </g>
+                    )}
+                    
+                    {/* Angry tongue */}
+                    {expression === 'angry' && (
+                      <path d="M 0 8 Q -2 10 0 12 Q 2 10 0 8" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
+                    )}
+                  </g>
+                  
+                  {/* Enhanced snake tail with segments */}
+                  <g transform={`translate(${endX}, ${endY})`}>
+                    <circle
+                      cx="0"
+                      cy="0"
+                      r="8"
                       fill={style.spots}
-                      fillOpacity="0.6"
+                      stroke="#1f2937"
+                      strokeWidth="2.5"
+                      style={{
+                        filter: 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5))'
+                      }}
+                    />
+                    {/* Tail tip */}
+                    <ellipse
+                      cx="0"
+                      cy="0"
+                      rx="5"
+                      ry="8"
+                      fill={style.body}
+                      fillOpacity="0.7"
+                    />
+                    {/* Tail rings */}
+                    <circle
+                      cx="0"
+                      cy="0"
+                      r="4"
+                      fill="none"
                       stroke={style.body}
                       strokeWidth="1.5"
-                      transform={`rotate(${segmentAngle} ${point.x} ${point.y})`}
-                      style={{
-                        filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))'
-                      }}
+                      strokeDasharray="2,2"
+                    />
+                  </g>
+                </g>
+              )
+            })}
+
+            {/* Draw Detailed Ladders */}
+            {LADDERS.map(([bottom, top], index) => {
+              const ladder = getLadderLines(bottom, top)
+              const steps = Math.max(6, Math.floor(Math.sqrt((ladder.endX - ladder.startX) ** 2 + (ladder.endY - ladder.startY) ** 2) / 8))
+              const ladderStyle = ladderStyles[index % ladderStyles.length]
+              
+              return (
+                <g key={`ladder-${index}`}>
+                  {/* Left rail */}
+                  <line
+                    x1={ladder.left.x1}
+                    y1={ladder.left.y1}
+                    x2={ladder.left.x2}
+                    y2={ladder.left.y2}
+                    stroke={ladderStyle.color}
+                    strokeWidth={ladderStyle.railWidth}
+                    strokeLinecap="round"
+                    style={{
+                      filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4))'
+                    }}
+                  />
+                  
+                  {/* Right rail */}
+                  <line
+                    x1={ladder.right.x1}
+                    y1={ladder.right.y1}
+                    x2={ladder.right.x2}
+                    y2={ladder.right.y2}
+                    stroke={ladderStyle.color}
+                    strokeWidth={ladderStyle.railWidth}
+                    strokeLinecap="round"
+                    style={{
+                      filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4))'
+                    }}
+                  />
+                  
+                  {/* Rungs with rivets */}
+                  {Array.from({ length: steps }, (_, i) => {
+                    const t = (i + 1) / (steps + 1)
+                    const x1 = ladder.left.x1 + (ladder.left.x2 - ladder.left.x1) * t
+                    const y1 = ladder.left.y1 + (ladder.left.y2 - ladder.left.y1) * t
+                    const x2 = ladder.right.x1 + (ladder.right.x2 - ladder.right.x1) * t
+                    const y2 = ladder.right.y1 + (ladder.right.y2 - ladder.right.y1) * t
+                    
+                    // Slight angle variation for some rungs (deterministic based on index)
+                    const angleVariation = index % 3 === 0 ? ((i % 3) - 1) * 0.8 : 0
+                    const offsetY1 = angleVariation
+                    const offsetY2 = -angleVariation
+                    
+                    return (
+                      <g key={`rung-${i}`}>
+                        {/* Rung */}
+                        <line
+                          x1={x1}
+                          y1={y1 + offsetY1}
+                          x2={x2}
+                          y2={y2 + offsetY2}
+                          stroke={ladderStyle.color}
+                          strokeWidth={ladderStyle.rungWidth}
+                          strokeLinecap="round"
+                          style={{
+                            filter: 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3))'
+                          }}
+                        />
+                        
+                        {/* Rivets/Nails */}
+                        <circle
+                          cx={x1}
+                          cy={y1 + offsetY1}
+                          r="2"
+                          fill="#9ca3af"
+                          stroke="#4b5563"
+                          strokeWidth="0.5"
+                          style={{
+                            filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))'
+                          }}
+                        />
+                        <circle
+                          cx={x2}
+                          cy={y2 + offsetY2}
+                          r="2"
+                          fill="#9ca3af"
+                          stroke="#4b5563"
+                          strokeWidth="0.5"
+                          style={{
+                            filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))'
+                          }}
+                        />
+                      </g>
+                    )
+                  })}
+                  
+                  {/* Top and bottom rivets */}
+                  <circle
+                    cx={ladder.left.x1}
+                    cy={ladder.left.y1}
+                    r="2.5"
+                    fill="#9ca3af"
+                    stroke="#4b5563"
+                    strokeWidth="0.5"
+                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
+                  />
+                  <circle
+                    cx={ladder.right.x1}
+                    cy={ladder.right.y1}
+                    r="2.5"
+                    fill="#9ca3af"
+                    stroke="#4b5563"
+                    strokeWidth="0.5"
+                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
+                  />
+                  <circle
+                    cx={ladder.left.x2}
+                    cy={ladder.left.y2}
+                    r="2.5"
+                    fill="#9ca3af"
+                    stroke="#4b5563"
+                    strokeWidth="0.5"
+                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
+                  />
+                  <circle
+                    cx={ladder.right.x2}
+                    cy={ladder.right.y2}
+                    r="2.5"
+                    fill="#9ca3af"
+                    stroke="#4b5563"
+                    strokeWidth="0.5"
+                    style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
+                  />
+                </g>
+              )
+            })}
+          </svg>
+
+          {/* Winner Badge */}
+          {winner && (
+            <div
+              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50"
+              style={{
+                animation: 'bounce 1s ease-in-out infinite',
+                top: '45px',
+              }}
+            >
+              <svg width="180" height="200" viewBox="0 0 180 200" className="drop-shadow-2xl">
+                {/* Badge circle with serrated edge */}
+                <defs>
+                  <linearGradient id="winnerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fbbf24" />
+                    <stop offset="50%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#d97706" />
+                  </linearGradient>
+                  <filter id="glow">
+                    <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                    <feMerge>
+                      <feMergeNode in="coloredBlur"/>
+                      <feMergeNode in="SourceGraphic"/>
+                    </feMerge>
+                  </filter>
+                </defs>
+                
+                {/* Serrated circle */}
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="65"
+                  fill="url(#winnerGradient)"
+                  stroke="#92400e"
+                  strokeWidth="4"
+                  filter="url(#glow)"
+                />
+                
+                {/* Serrated edge pattern */}
+                {Array.from({ length: 20 }, (_, i) => {
+                  const angle = (i * 18) * Math.PI / 180
+                  const x1 = 90 + Math.cos(angle) * 65
+                  const y1 = 90 + Math.sin(angle) * 65
+                  const x2 = 90 + Math.cos(angle) * 70
+                  const y2 = 90 + Math.sin(angle) * 70
+                  return (
+                    <line
+                      key={`serration-${i}`}
+                      x1={x1}
+                      y1={y1}
+                      x2={x2}
+                      y2={y2}
+                      stroke="#92400e"
+                      strokeWidth="2"
+                      strokeLinecap="round"
                     />
                   )
                 })}
                 
-                {/* Enhanced snake head with gradient and details */}
-                <g transform={`translate(${startX}, ${startY}) rotate(${angle})`}>
-                  <defs>
-                    <linearGradient id={`headGradient-${index}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor={style.body} stopOpacity="1" />
-                      <stop offset="100%" stopColor={style.spots} stopOpacity="0.9" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* Head shadow/back layer */}
-                  <ellipse
-                    cx="1"
-                    cy="1"
-                    rx="13"
-                    ry="11"
-                    fill="#1f2937"
-                    fillOpacity="0.2"
-                  />
-                  
-                  {/* Head base with gradient */}
-                  <ellipse
-                    cx="0"
-                    cy="0"
-                    rx="14"
-                    ry="12"
-                    fill={`url(#headGradient-${index})`}
-                    stroke="#1f2937"
-                    strokeWidth="2.5"
-                    style={{
-                      filter: 'drop-shadow(0 3px 8px rgba(0, 0, 0, 0.6))'
-                    }}
-                  />
-                  
-                  {/* Head highlight */}
-                  <ellipse
-                    cx="-4"
-                    cy="-4"
-                    rx="6"
-                    ry="5"
-                    fill="white"
-                    fillOpacity="0.3"
-                  />
-                  
-                  {/* Expression eyes with more detail */}
-                  {expression === 'happy' && (
-                    <>
-                      {/* Eye whites */}
-                      <ellipse cx="-7" cy="-3" rx="4" ry="3" fill="white" stroke="#1f2937" strokeWidth="1.5" />
-                      <ellipse cx="7" cy="-3" rx="4" ry="3" fill="white" stroke="#1f2937" strokeWidth="1.5" />
-                      {/* Eye pupils */}
-                      <circle cx="-7" cy="-3" r="2" fill="#1f2937" />
-                      <circle cx="7" cy="-3" r="2" fill="#1f2937" />
-                      {/* Eye shine */}
-                      <circle cx="-6.5" cy="-3.5" r="0.8" fill="white" />
-                      <circle cx="7.5" cy="-3.5" r="0.8" fill="white" />
-                      {/* Happy eyebrows */}
-                      <path d="M -9 -6 Q -7 -8 -5 -6" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-                      <path d="M 5 -6 Q 7 -8 9 -6" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-                      {/* Smile */}
-                      <path d="M -5 3 Q 0 6 5 3" stroke="#1f2937" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                    </>
-                  )}
-                  
-                  {expression === 'angry' && (
-                    <>
-                      {/* Angry eyebrows */}
-                      <line x1="-8" y1="-7" x2="-5" y2="-5" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round" />
-                      <line x1="8" y1="-7" x2="5" y2="-5" stroke="#1f2937" strokeWidth="2.5" strokeLinecap="round" />
-                      {/* Angry eyes */}
-                      <ellipse cx="-7" cy="-3" rx="3.5" ry="2.5" fill="#dc2626" stroke="#1f2937" strokeWidth="1.5" />
-                      <ellipse cx="7" cy="-3" rx="3.5" ry="2.5" fill="#dc2626" stroke="#1f2937" strokeWidth="1.5" />
-                      <line x1="-9" y1="-3" x2="-5" y2="-3" stroke="#1f2937" strokeWidth="2" />
-                      <line x1="9" y1="-3" x2="5" y2="-3" stroke="#1f2937" strokeWidth="2" />
-                      {/* Frown */}
-                      <path d="M -4 4 Q 0 2 4 4" stroke="#1f2937" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-                    </>
-                  )}
-                  
-                  {expression === 'dizzy' && (
-                    <>
-                      {/* Dizzy eye circles */}
-                      <circle cx="-6" cy="-3" r="4" fill="white" stroke="#1f2937" strokeWidth="2" />
-                      <circle cx="6" cy="-3" r="4" fill="white" stroke="#1f2937" strokeWidth="2" />
-                      {/* Spiral eyes */}
-                      <path d="M -6 -3 Q -6 -5 -4 -5 Q -2 -5 -2 -3 Q -2 -1 -4 -1 Q -6 -1 -6 -3" 
-                            stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-                      <path d="M 6 -3 Q 6 -5 4 -5 Q 2 -5 2 -3 Q 2 -1 4 -1 Q 6 -1 6 -3" 
-                            stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-                      {/* Confused mouth */}
-                      <path d="M -3 3 Q 0 5 3 3" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-                    </>
-                  )}
-                  
-                  {expression === 'loving' && (
-                    <>
-                      {/* Heart eyes - left */}
-                      <path d="M -6 -5 Q -6 -7 -4 -7 Q -2 -7 -2 -5 Q -2 -3 -4 -1 Q -6 -3 -6 -5" 
-                            fill="#ec4899" stroke="#1f2937" strokeWidth="1.5" />
-                      {/* Heart eyes - right */}
-                      <path d="M 6 -5 Q 6 -7 4 -7 Q 2 -7 2 -5 Q 2 -3 4 -1 Q 6 -3 6 -5" 
-                            fill="#ec4899" stroke="#1f2937" strokeWidth="1.5" />
-                      {/* Heart shine */}
-                      <circle cx="-5" cy="-5" r="1.5" fill="white" fillOpacity="0.7" />
-                      <circle cx="5" cy="-5" r="1.5" fill="white" fillOpacity="0.7" />
-                      {/* Smile */}
-                      <path d="M -4 3 Q 0 6 4 3" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-                    </>
-                  )}
-                  
-                  {/* Forked tongue */}
-                  {expression !== 'angry' && (
-                    <g>
-                      <path d="M 0 8 L -3 12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-                      <path d="M 0 8 L 3 12" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" />
-                    </g>
-                  )}
-                  
-                  {/* Angry tongue */}
-                  {expression === 'angry' && (
-                    <path d="M 0 8 Q -2 10 0 12 Q 2 10 0 8" fill="#dc2626" stroke="#991b1b" strokeWidth="1.5" />
-                  )}
-                </g>
+                {/* WINNER! text */}
+                <text
+                  x="90"
+                  y="105"
+                  textAnchor="middle"
+                  fill="white"
+                  fontSize="28"
+                  fontWeight="bold"
+                  fontFamily="Arial, sans-serif"
+                  transform="rotate(-5 90 105)"
+                  style={{
+                    filter: 'drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.8))'
+                  }}
+                >
+                  WINNER!
+                </text>
                 
-                {/* Enhanced snake tail with segments */}
-                <g transform={`translate(${endX}, ${endY})`}>
-                  <circle
-                    cx="0"
-                    cy="0"
-                    r="8"
-                    fill={style.spots}
-                    stroke="#1f2937"
-                    strokeWidth="2.5"
-                    style={{
-                      filter: 'drop-shadow(0 3px 6px rgba(0, 0, 0, 0.5))'
-                    }}
-                  />
-                  {/* Tail tip */}
-                  <ellipse
-                    cx="0"
-                    cy="0"
-                    rx="5"
-                    ry="8"
-                    fill={style.body}
-                    fillOpacity="0.7"
-                  />
-                  {/* Tail rings */}
-                  <circle
-                    cx="0"
-                    cy="0"
-                    r="4"
-                    fill="none"
-                    stroke={style.body}
-                    strokeWidth="1.5"
-                    strokeDasharray="2,2"
-                  />
-                </g>
-              </g>
-            )
-          })}
+                {/* Ribbons */}
+                <path
+                  d="M 70 150 Q 70 160 60 165 Q 50 170 50 180 L 90 180 L 90 150 Z"
+                  fill="#fbbf24"
+                  stroke="#92400e"
+                  strokeWidth="2"
+                />
+                <path
+                  d="M 110 150 Q 110 160 120 165 Q 130 170 130 180 L 90 180 L 90 150 Z"
+                  fill="#fbbf24"
+                  stroke="#92400e"
+                  strokeWidth="2"
+                />
+                
+                {/* Ribbon highlights */}
+                <path
+                  d="M 70 155 Q 75 160 65 162"
+                  fill="#fcd34d"
+                  opacity="0.6"
+                />
+                <path
+                  d="M 110 155 Q 105 160 115 162"
+                  fill="#fcd34d"
+                  opacity="0.6"
+                />
+              </svg>
+            </div>
+          )}
 
-          {/* Draw Detailed Ladders */}
-          {LADDERS.map(([bottom, top], index) => {
-            const ladder = getLadderLines(bottom, top)
-            const steps = Math.max(6, Math.floor(Math.sqrt((ladder.endX - ladder.startX) ** 2 + (ladder.endY - ladder.startY) ** 2) / 8))
-            const ladderStyle = ladderStyles[index % ladderStyles.length]
+          {/* Board Cells */}
+          {boardGrid.map(({ position, x, y }) => {
+            const playersHere = getPlayersAtPosition(position)
+            const snakeOrLadder = getSnakeOrLadderForPosition(position)
             
             return (
-              <g key={`ladder-${index}`}>
-                {/* Left rail */}
-                <line
-                  x1={ladder.left.x1}
-                  y1={ladder.left.y1}
-                  x2={ladder.left.x2}
-                  y2={ladder.left.y2}
-                  stroke={ladderStyle.color}
-                  strokeWidth={ladderStyle.railWidth}
-                  strokeLinecap="round"
-                  style={{
-                    filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4))'
-                  }}
-                />
-                
-                {/* Right rail */}
-                <line
-                  x1={ladder.right.x1}
-                  y1={ladder.right.y1}
-                  x2={ladder.right.x2}
-                  y2={ladder.right.y2}
-                  stroke={ladderStyle.color}
-                  strokeWidth={ladderStyle.railWidth}
-                  strokeLinecap="round"
-                  style={{
-                    filter: 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4))'
-                  }}
-                />
-                
-                {/* Rungs with rivets */}
-                {Array.from({ length: steps }, (_, i) => {
-                  const t = (i + 1) / (steps + 1)
-                  const x1 = ladder.left.x1 + (ladder.left.x2 - ladder.left.x1) * t
-                  const y1 = ladder.left.y1 + (ladder.left.y2 - ladder.left.y1) * t
-                  const x2 = ladder.right.x1 + (ladder.right.x2 - ladder.right.x1) * t
-                  const y2 = ladder.right.y1 + (ladder.right.y2 - ladder.right.y1) * t
-                  
-                  // Slight angle variation for some rungs (deterministic based on index)
-                  const angleVariation = index % 3 === 0 ? ((i % 3) - 1) * 0.8 : 0
-                  const offsetY1 = angleVariation
-                  const offsetY2 = -angleVariation
-                  
-                  return (
-                    <g key={`rung-${i}`}>
-                      {/* Rung */}
-                      <line
-                        x1={x1}
-                        y1={y1 + offsetY1}
-                        x2={x2}
-                        y2={y2 + offsetY2}
-                        stroke={ladderStyle.color}
-                        strokeWidth={ladderStyle.rungWidth}
-                        strokeLinecap="round"
-                        style={{
-                          filter: 'drop-shadow(0 1px 3px rgba(0, 0, 0, 0.3))'
-                        }}
-                      />
-                      
-                      {/* Rivets/Nails */}
-                      <circle
-                        cx={x1}
-                        cy={y1 + offsetY1}
-                        r="2"
-                        fill="#9ca3af"
-                        stroke="#4b5563"
-                        strokeWidth="0.5"
-                        style={{
-                          filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))'
-                        }}
-                      />
-                      <circle
-                        cx={x2}
-                        cy={y2 + offsetY2}
-                        r="2"
-                        fill="#9ca3af"
-                        stroke="#4b5563"
-                        strokeWidth="0.5"
-                        style={{
-                          filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))'
-                        }}
-                      />
-                    </g>
-                  )
-                })}
-                
-                {/* Top and bottom rivets */}
-                <circle
-                  cx={ladder.left.x1}
-                  cy={ladder.left.y1}
-                  r="2.5"
-                  fill="#9ca3af"
-                  stroke="#4b5563"
-                  strokeWidth="0.5"
-                  style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
-                />
-                <circle
-                  cx={ladder.right.x1}
-                  cy={ladder.right.y1}
-                  r="2.5"
-                  fill="#9ca3af"
-                  stroke="#4b5563"
-                  strokeWidth="0.5"
-                  style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
-                />
-                <circle
-                  cx={ladder.left.x2}
-                  cy={ladder.left.y2}
-                  r="2.5"
-                  fill="#9ca3af"
-                  stroke="#4b5563"
-                  strokeWidth="0.5"
-                  style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
-                />
-                <circle
-                  cx={ladder.right.x2}
-                  cy={ladder.right.y2}
-                  r="2.5"
-                  fill="#9ca3af"
-                  stroke="#4b5563"
-                  strokeWidth="0.5"
-                  style={{ filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5))' }}
-                />
-              </g>
+              <div
+                key={position}
+                style={getCellStyle(position, x, y)}
+                onMouseEnter={() => setHoveredCell(position)}
+                onMouseLeave={() => setHoveredCell(null)}
+                className="group game-cell"
+              >
+                {/* Cell number */}
+                <span className="relative z-0">{position}</span>
+
+                {/* Hover tooltip */}
+                {getHoverTooltipMessage({ position, snakeOrLadder, playersHere })}
+              </div>
             )
           })}
-        </svg>
 
-        {/* Winner Badge */}
-        {winner && (
-          <div
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50"
-            style={{
-              animation: 'bounce 1s ease-in-out infinite'
-            }}
-          >
-            <svg width="180" height="200" viewBox="0 0 180 200" className="drop-shadow-2xl">
-              {/* Badge circle with serrated edge */}
-              <defs>
-                <linearGradient id="winnerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stopColor="#fbbf24" />
-                  <stop offset="50%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#d97706" />
-                </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge>
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
-              </defs>
-              
-              {/* Serrated circle */}
-              <circle
-                cx="90"
-                cy="90"
-                r="65"
-                fill="url(#winnerGradient)"
-                stroke="#92400e"
-                strokeWidth="4"
-                filter="url(#glow)"
-              />
-              
-              {/* Serrated edge pattern */}
-              {Array.from({ length: 20 }, (_, i) => {
-                const angle = (i * 18) * Math.PI / 180
-                const x1 = 90 + Math.cos(angle) * 65
-                const y1 = 90 + Math.sin(angle) * 65
-                const x2 = 90 + Math.cos(angle) * 70
-                const y2 = 90 + Math.sin(angle) * 70
-                return (
-                  <line
-                    key={`serration-${i}`}
-                    x1={x1}
-                    y1={y1}
-                    x2={x2}
-                    y2={y2}
-                    stroke="#92400e"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                  />
-                )
-              })}
-              
-              {/* WINNER! text */}
-              <text
-                x="90"
-                y="105"
-                textAnchor="middle"
-                fill="white"
-                fontSize="28"
-                fontWeight="bold"
-                fontFamily="Arial, sans-serif"
-                transform="rotate(-5 90 105)"
+          {/* Player Icons Layer - rendered separately above everything */}
+          {boardGrid.map(({ position, x, y }) => {
+            const playersHere = getPlayersAtPosition(position)
+            
+            if (playersHere.length === 0) return null
+            
+            return (
+              <div
+                key={`players-${position}`}
+                className="absolute"
                 style={{
-                  filter: 'drop-shadow(3px 3px 6px rgba(0, 0, 0, 0.8))'
+                  left: `${BOARD_PADDING + x * BOARD_CELL_SIZE}px`,
+                  top: `${BOARD_PADDING + y * BOARD_CELL_SIZE}px`,
+                  width: `${BOARD_CELL_SIZE}px`,
+                  height: `${BOARD_CELL_SIZE}px`,
+                  zIndex: 10,
+                  pointerEvents: 'none',
                 }}
               >
-                WINNER!
-              </text>
-              
-              {/* Ribbons */}
-              <path
-                d="M 70 150 Q 70 160 60 165 Q 50 170 50 180 L 90 180 L 90 150 Z"
-                fill="#fbbf24"
-                stroke="#92400e"
-                strokeWidth="2"
-              />
-              <path
-                d="M 110 150 Q 110 160 120 165 Q 130 170 130 180 L 90 180 L 90 150 Z"
-                fill="#fbbf24"
-                stroke="#92400e"
-                strokeWidth="2"
-              />
-              
-              {/* Ribbon highlights */}
-              <path
-                d="M 70 155 Q 75 160 65 162"
-                fill="#fcd34d"
-                opacity="0.6"
-              />
-              <path
-                d="M 110 155 Q 105 160 115 162"
-                fill="#fcd34d"
-                opacity="0.6"
-              />
-            </svg>
-          </div>
-        )}
-
-        {/* Board Cells */}
-        {boardGrid.map(({ position, x, y }) => {
-          const playersHere = getPlayersAtPosition(position)
-          const snakeOrLadder = getSnakeOrLadderForPosition(position)
-          
-          return (
-            <div
-              key={position}
-              style={getCellStyle(position, x, y)}
-              onMouseEnter={() => setHoveredCell(position)}
-              onMouseLeave={() => setHoveredCell(null)}
-              className="group game-cell"
-              title={
-                snakeOrLadder
-                  ? `${snakeOrLadder.type === 'snake' ? 'Snake' : 'Ladder'}: ${snakeOrLadder.from} → ${snakeOrLadder.to}`
-                  : `Position ${position}`
-              }
-            >
-              {/* Cell number */}
-              <span className="relative z-0">{position}</span>
-
-              {/* Players */}
-              {playersHere.map((player, playerIndex) => {
-                const offsetX = (playerIndex % 2 === 0 ? -1 : 1) * (cellSize * 0.2)
-                const offsetY = Math.floor(playerIndex / 2) * (cellSize * 0.2)
-                const isCurrentPlayer = player.index === currentPlayerIndex
-                
-                return (
-                  <div
-                    key={`${player.index}-${position}`}
-                    className="absolute rounded-full transition-all duration-300"
-                    style={{
-                      width: '16px',
-                      height: '16px',
-                      backgroundColor: player.color,
-                      border: isCurrentPlayer 
-                        ? '3px solid #fbbf24' 
-                        : '2px solid white',
-                      boxShadow: isCurrentPlayer
-                        ? '0 0 8px rgba(251, 191, 36, 0.8), 0 0 16px rgba(251, 191, 36, 0.4)'
-                        : '0 2px 4px rgba(0, 0, 0, 0.2)',
-                      left: `${cellSize / 2 + offsetX - 8}px`,
-                      top: `${cellSize / 2 + offsetY - 8}px`,
-                      zIndex: 5,
-                      animation: isCurrentPlayer 
-                        ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
-                        : 'none',
-                    }}
-                    title={player.name}
-                  />
-                )
-              })}
-
-              {/* Hover tooltip */}
-              {hoveredCell === position && (
-                <div
-                  className="absolute -top-10 left-1/2 transform -translate-x-1/2 bg-gray-900 dark:bg-gray-700 text-white text-xs px-3 py-2 rounded-lg whitespace-nowrap pointer-events-none shadow-lg"
-                  style={{ zIndex: 20 }}
-                >
-                  <div className="font-bold">Position {position}</div>
-                  {snakeOrLadder && (
-                    <div className="block text-yellow-300 mt-1">
-                      {snakeOrLadder.type === 'snake' ? '🐍 ↓ Snake' : '🪜 ↑ Ladder'} → {snakeOrLadder.to}
-                    </div>
-                  )}
-                  {playersHere.length > 0 && (
-                    <div className="block text-blue-300 mt-1">
-                      👥 {playersHere.map(p => p.name).join(', ')}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )
-        })}
+                {playersHere.map((player, playerIndex) => {
+                  const offsetX = (playerIndex % 2 === 0 ? -1 : 1) * (BOARD_CELL_SIZE * 0.2)
+                  const offsetY = Math.floor(playerIndex / 2) * (BOARD_CELL_SIZE * 0.2)
+                  const isCurrentPlayer = player.index === currentPlayerIndex
+                  const playerSize = isCurrentPlayer ? 24 : 20
+                  const centerX = BOARD_CELL_SIZE / 2 + offsetX
+                  const centerY = BOARD_CELL_SIZE / 2 + offsetY
+                  
+                  // Determine expression based on player state
+                  const expression = isCurrentPlayer ? 'happy' : 'neutral'
+                  
+                  return (
+                    <svg
+                      key={`${player.index}-${position}`}
+                      className="absolute transition-all duration-300 cursor-pointer player-icon"
+                      style={{
+                        left: `${centerX - playerSize / 2}px`,
+                        top: `${centerY - playerSize / 2}px`,
+                        width: `${playerSize}px`,
+                        height: `${playerSize}px`,
+                        zIndex: 10,
+                        filter: isCurrentPlayer
+                          ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.9)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.5)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4))'
+                          : 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5))',
+                        animation: isCurrentPlayer 
+                          ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
+                          : 'player-bounce 2s ease-in-out infinite',
+                        transform: isCurrentPlayer ? 'scale(1.1)' : 'scale(1)',
+                      }}
+                      title={player.name}
+                      onMouseEnter={(e) => {
+                        if (!isCurrentPlayer) {
+                          e.currentTarget.style.animation = 'player-hover 0.5s ease-in-out infinite'
+                          e.currentTarget.style.transform = 'scale(1.15)'
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isCurrentPlayer) {
+                          e.currentTarget.style.animation = 'player-bounce 2s ease-in-out infinite'
+                          e.currentTarget.style.transform = 'scale(1)'
+                        }
+                      }}
+                    >
+                      <defs>
+                        {/* Player gradient */}
+                        <radialGradient id={`playerGradient-${player.index}-${position}`}>
+                          <stop offset="0%" stopColor={player.color} stopOpacity="1" />
+                          <stop offset="70%" stopColor={player.color} stopOpacity="0.9" />
+                          <stop offset="100%" stopColor={player.color} stopOpacity="0.7" />
+                        </radialGradient>
+                      </defs>
+                      
+                      {/* Player body circle with gradient */}
+                      <circle
+                        cx={playerSize / 2}
+                        cy={playerSize / 2}
+                        r={playerSize / 2 - 2}
+                        fill={`url(#playerGradient-${player.index}-${position})`}
+                        stroke={isCurrentPlayer ? '#fbbf24' : '#ffffff'}
+                        strokeWidth={isCurrentPlayer ? '3' : '2'}
+                      />
+                      
+                      {/* Highlight shine */}
+                      <ellipse
+                        cx={playerSize / 2 - 3}
+                        cy={playerSize / 2 - 3}
+                        rx={playerSize / 4}
+                        ry={playerSize / 5}
+                        fill="white"
+                        fillOpacity="0.4"
+                      />
+                      
+                      {/* Face expression */}
+                      {expression === 'happy' && (
+                        <>
+                          {/* Happy eyes */}
+                          <ellipse
+                            cx={playerSize / 2 - 4}
+                            cy={playerSize / 2 - 2}
+                            rx="2"
+                            ry="2.5"
+                            fill="white"
+                            stroke="#1f2937"
+                            strokeWidth="0.8"
+                          />
+                          <ellipse
+                            cx={playerSize / 2 + 4}
+                            cy={playerSize / 2 - 2}
+                            rx="2"
+                            ry="2.5"
+                            fill="white"
+                            stroke="#1f2937"
+                            strokeWidth="0.8"
+                          />
+                          {/* Eye pupils */}
+                          <circle
+                            cx={playerSize / 2 - 4}
+                            cy={playerSize / 2 - 2}
+                            r="1.2"
+                            fill="#1f2937"
+                          />
+                          <circle
+                            cx={playerSize / 2 + 4}
+                            cy={playerSize / 2 - 2}
+                            r="1.2"
+                            fill="#1f2937"
+                          />
+                          {/* Eye shine */}
+                          <circle
+                            cx={playerSize / 2 - 3.5}
+                            cy={playerSize / 2 - 2.5}
+                            r="0.5"
+                            fill="white"
+                          />
+                          <circle
+                            cx={playerSize / 2 + 4.5}
+                            cy={playerSize / 2 - 2.5}
+                            r="0.5"
+                            fill="white"
+                          />
+                          {/* Happy smile */}
+                          <path
+                            d={`M ${playerSize / 2 - 4} ${playerSize / 2 + 3} Q ${playerSize / 2} ${playerSize / 2 + 6} ${playerSize / 2 + 4} ${playerSize / 2 + 3}`}
+                            stroke="#1f2937"
+                            strokeWidth="1.5"
+                            fill="none"
+                            strokeLinecap="round"
+                          />
+                        </>
+                      )}
+                      
+                      {expression === 'neutral' && (
+                        <>
+                          {/* Neutral eyes */}
+                          <ellipse
+                            cx={playerSize / 2 - 4}
+                            cy={playerSize / 2 - 1}
+                            rx="2"
+                            ry="2"
+                            fill="white"
+                            stroke="#1f2937"
+                            strokeWidth="0.8"
+                          />
+                          <ellipse
+                            cx={playerSize / 2 + 4}
+                            cy={playerSize / 2 - 1}
+                            rx="2"
+                            ry="2"
+                            fill="white"
+                            stroke="#1f2937"
+                            strokeWidth="0.8"
+                          />
+                          {/* Eye pupils */}
+                          <circle
+                            cx={playerSize / 2 - 4}
+                            cy={playerSize / 2 - 1}
+                            r="1"
+                            fill="#1f2937"
+                          />
+                          <circle
+                            cx={playerSize / 2 + 4}
+                            cy={playerSize / 2 - 1}
+                            r="1"
+                            fill="#1f2937"
+                          />
+                          {/* Eye shine */}
+                          <circle
+                            cx={playerSize / 2 - 3.5}
+                            cy={playerSize / 2 - 1.5}
+                            r="0.4"
+                            fill="white"
+                          />
+                          <circle
+                            cx={playerSize / 2 + 4.5}
+                            cy={playerSize / 2 - 1.5}
+                            r="0.4"
+                            fill="white"
+                          />
+                          {/* Neutral mouth */}
+                          <line
+                            x1={playerSize / 2 - 3}
+                            y1={playerSize / 2 + 4}
+                            x2={playerSize / 2 + 3}
+                            y2={playerSize / 2 + 4}
+                            stroke="#1f2937"
+                            strokeWidth="1.5"
+                            strokeLinecap="round"
+                          />
+                        </>
+                      )}
+                      
+                      {/* Current player indicator ring */}
+                      {isCurrentPlayer && (
+                        <circle
+                          cx={playerSize / 2}
+                          cy={playerSize / 2}
+                          r={playerSize / 2 + 2}
+                          fill="none"
+                          stroke="#fbbf24"
+                          strokeWidth="2"
+                          strokeDasharray="3,3"
+                          opacity="0.8"
+                        />
+                      )}
+                    </svg>
+                  )
+                })}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )
