@@ -6,3 +6,9 @@ export const PLAYER_COLORS = [
     '#a855f7', // purple
     '#f97316', // orange
 ];
+
+export enum GAME_STATE {
+    'setup' = 'setup',
+    'playing' = 'playing',
+    'finished' = 'finished',
+}

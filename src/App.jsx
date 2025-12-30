@@ -7,9 +7,10 @@ import Dice from './components/Dice'
 import GameStatus from './components/GameStatus'
 import { movePlayer, rollDice } from './utils/gameLogic'
 import { ICONS_MAP } from './constants/GameBoardConstants'
+import { GAME_STATE } from './constants/PlayerConstants'
 
 function App() {
-  const [gameState, setGameState] = useState('setup') // 'setup', 'playing', 'finished'
+  const [gameState, setGameState] = useState(GAME_STATE.setup)
   const [players, setPlayers] = useState([])
   const [currentPlayerIndex, setCurrentPlayerIndex] = useState(0)
   const [diceValue, setDiceValue] = useState(0)
@@ -20,7 +21,7 @@ function App() {
 
   const handleStartGame = (gamePlayers) => {
     setPlayers(gamePlayers)
-    setGameState('playing')
+    setGameState(GAME_STATE.playing)
     setCurrentPlayerIndex(0)
     setDiceValue(0)
     setLastMove(null)
@@ -29,7 +30,7 @@ function App() {
   }
 
   const handleRollDice = () => {
-    if (isRolling || gameState !== 'playing') return
+    if (isRolling || gameState !== GAME_STATE.playing) return
 
     setIsRolling(true)
     setDiceValue(0)
@@ -66,7 +67,7 @@ function App() {
       // Check for win
       if (result.type === 'win') {
         setWinner(currentPlayer)
-        setGameState('finished')
+        setGameState(GAME_STATE.finished)
         setExtraTurn(false)
       } else {
         // Check if player rolled a 6 - they get an extra turn
@@ -83,7 +84,7 @@ function App() {
   }
 
   const handleNewGame = () => {
-    setGameState('setup')
+    setGameState(GAME_STATE.setup)
     setPlayers([])
     setCurrentPlayerIndex(0)
     setDiceValue(0)
@@ -110,7 +111,7 @@ function App() {
           </header>
 
           {/* Main Content */}
-          {gameState === 'setup' ? (
+          {gameState === GAME_STATE.setup ? (
             <PlayerSetup onStartGame={handleStartGame} />
           ) : (
             <div className="grid lg:grid-cols-3 gap-6">
