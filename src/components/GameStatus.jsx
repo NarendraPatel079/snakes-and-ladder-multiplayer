@@ -42,13 +42,12 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
       {lastMove && lastDiceValue > 0 && (
         <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-semibold">{lastMove.player.name}</span> rolled{' '}
-            <span className="font-bold text-blue-600 dark:text-blue-400">
+            <span className="font-semibold">{lastMove.player.name}</span> rolled
+            <span className="font-bold text-blue-600 dark:text-blue-400 px-1">
               {lastDiceValue}
             </span>
             {lastMove.snakeOrLadder && (
-              <span className="ml-2">
-                {' '}
+              <span>
                 and{' '}
                 {lastMove.snakeOrLadder.type === 'snake' ? ICONS_MAP.snake : ICONS_MAP.ladder}{' '}
                 {lastMove.snakeOrLadder.type === 'snake'

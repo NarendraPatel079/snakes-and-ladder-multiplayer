@@ -85,3 +85,49 @@ body {
     transform: scale(1.1) rotate(5deg);
   }
 }
+
+/* Player movement animations */
+@keyframes walk-step {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+  }
+  50% {
+    transform: translateY(-8px) scale(1.1);
+  }
+}
+
+@keyframes climb-ladder {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  25% {
+    transform: translateY(-5px) scale(1.15) rotate(-5deg);
+  }
+  50% {
+    transform: translateY(-10px) scale(1.2) rotate(0deg);
+  }
+  75% {
+    transform: translateY(-5px) scale(1.15) rotate(5deg);
+  }
+  100% {
+    transform: translateY(0) scale(1.2);
+  }
+}
+
+@keyframes slide-snake {
+  0% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  25% {
+    transform: translateY(5px) scale(1.1) rotate(-10deg);
+  }
+  50% {
+    transform: translateY(10px) scale(1.15) rotate(-15deg);
+  }
+  75% {
+    transform: translateY(5px) scale(1.1) rotate(-10deg);
+  }
+  100% {
+    transform: translateY(0) scale(1.1) rotate(10deg);
+  }
+}
