@@ -920,7 +920,7 @@ const GameBoard = ({ players, currentPlayerIndex, winner, animatingPlayer, anima
                     ? animationStyle.transform 
                     : (isCurrentPlayer ? 'scale(1.1)' : 'scale(1)'),
                 }}
-                title={player.name}
+                title={`${player.name}${player.isBot ? ' (Bot)' : ''}`}
                 onMouseEnter={(e) => {
                   if (!isCurrentPlayer && !isAnimatingThisPlayer) {
                     e.currentTarget.style.animation = 'player-hover 0.5s ease-in-out infinite'

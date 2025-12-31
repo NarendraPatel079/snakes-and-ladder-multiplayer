@@ -20,13 +20,14 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gradient-to-r from-teal-400 to-teal-500 rounded-lg shadow-md">
+      <div className="p-4 rounded-lg shadow-md bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-purple-800">
         <p className="text-white font-semibold text-lg">
           Current Turn:{' '}
           <span
-            className="px-3 py-1 rounded-lg bg-white bg-opacity-20"
+            className="px-3 py-1 rounded-lg bg-white bg-opacity-20 inline-flex items-center gap-2"
             style={{ color: players[currentPlayerIndex]?.color }}
           >
+            {players[currentPlayerIndex]?.isBot && <span>{`${ICONS_MAP.bot}`}</span>}
             {players[currentPlayerIndex]?.name}
           </span>
         </p>
@@ -78,7 +79,8 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
                 className="w-4 h-4 rounded-full"
                 style={{ backgroundColor: player.color }}
               />
-              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+              <span className="font-semibold text-sm text-gray-900 dark:text-white flex items-center gap-1">
+                {player.isBot && <span className="text-xs">{`${ICONS_MAP.bot}`}</span>}
                 {player.name}
               </span>
             </div>

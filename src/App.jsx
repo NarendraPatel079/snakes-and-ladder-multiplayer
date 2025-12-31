@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
 import ThemeToggle from './components/ThemeToggle'
 import PlayerSetup from './components/PlayerSetup'
@@ -167,7 +167,29 @@ function App() {
     setLastMove(null)
     setWinner(null)
     setExtraTurn(false)
+    setIsAnimating(false)
+    setAnimatingPlayer(null)
+    setAnimationPath([])
   }
+
+  // Auto-roll for bot players
+  useEffect(() => {
+    if (gameState !== GAME_STATE.playing || isRolling || isAnimating || winner) return
+    if (players.length === 0) return
+    
+    const currentPlayer = players[currentPlayerIndex]
+    if (currentPlayer?.isBot) {
+      // Wait a bit before bot rolls (makes it feel more natural)
+      const botDelay = setTimeout(() => {
+        if (!isRolling && !isAnimating && gameState === GAME_STATE.playing) {
+          handleRollDice()
+        }
+      }, 1500) // 1.5 second delay for bot to "think"
+      
+      return () => clearTimeout(botDelay)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState, currentPlayerIndex, isRolling, isAnimating, winner, extraTurn])
 
   return (
     <ThemeProvider>
@@ -211,6 +233,7 @@ function App() {
                     isRolling={isRolling}
                     onRoll={handleRollDice}
                     winner={winner}
+                    isBotTurn={players[currentPlayerIndex]?.isBot}
                   />
                 </div>
 

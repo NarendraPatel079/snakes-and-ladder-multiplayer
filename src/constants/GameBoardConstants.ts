@@ -3,6 +3,7 @@ export const BOARD_CELL_SIZE = 50;
 export const BOARD_PADDING = 15;
 export const ICONS_MAP = {
     'player': '👥',
+    'bot': '🤖',
     'snake': '🐍',
     'ladder': '🪜',
     'dice': '🎲',
