@@ -2,10 +2,38 @@ import { useState, useRef, useMemo, useEffect } from 'react'
 import { getPositionCoords } from '../utils/gameLogic'
 import { BOARD_SIZE, BOARD_CELL_SIZE, BOARD_PADDING, ICONS_MAP, SNAKES, LADDERS } from '../constants/GameBoardConstants'
 
-const GameBoard = ({ players, currentPlayerIndex, winner }) => {
+const GameBoard = ({ players, currentPlayerIndex, winner, animatingPlayer, animationPath, isAnimating }) => {
   const [hoveredCell, setHoveredCell] = useState(null)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const boardRef = useRef(null)
+  
+  // Get animated position for player being animated
+  const getAnimatedPosition = (player, playerIndex) => {
+    if (animatingPlayer === playerIndex && animationPath.length > 0) {
+      // Return the current position in the animation path
+      return animationPath[animationPath.length - 1]
+    }
+    return player.position
+  }
+  
+  // Check if player is on a ladder or snake during animation
+  const getAnimationType = (player, playerIndex) => {
+    if (animatingPlayer === playerIndex && animationPath.length > 1) {
+      const currentPos = animationPath[animationPath.length - 1]
+      const previousPos = animationPath[animationPath.length - 2]
+      
+      // Check if we're moving from a snake head (sliding down)
+      const snake = SNAKES.find(([top]) => top === previousPos)
+      if (snake && currentPos === snake[1]) return 'sliding'
+      
+      // Check if we're moving from a ladder bottom (climbing up)
+      const ladder = LADDERS.find(([bottom]) => bottom === previousPos)
+      if (ladder && currentPos === ladder[1]) return 'climbing'
+      
+      return 'walking'
+    }
+    return null
+  }
   
 
   // Track dark mode changes
@@ -118,11 +146,14 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
     return null
   }
 
-  // Get players at a position
+  // Get players at a position (including animated position)
   const getPlayersAtPosition = (position) => {
     return players
       .map((player, index) => ({ ...player, index }))
-      .filter((player) => player.position === position)
+      .filter((player) => {
+        const displayPosition = getAnimatedPosition(player, player.index)
+        return displayPosition === position
+      })
   }
 
   // Snake color schemes and styles
@@ -820,71 +851,97 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
             )
           })}
 
-          {/* Player Icons Layer - rendered separately above everything */}
-          {boardGrid.map(({ position, x, y }) => {
-            const playersHere = getPlayersAtPosition(position)
+          {/* Player Icons Layer - rendered separately above everything with animation support */}
+          {players.map((player, playerIndex) => {
+            const displayPosition = getAnimatedPosition(player, playerIndex)
+            const { x, y } = getPositionCoords(displayPosition)
+            const animationType = getAnimationType(player, playerIndex)
+            const isAnimatingThisPlayer = animatingPlayer === playerIndex && isAnimating
             
-            if (playersHere.length === 0) return null
+            // Get other players at the same position for offset calculation
+            const playersAtSamePos = players.filter((p, idx) => {
+              const pPos = getAnimatedPosition(p, idx)
+              return pPos === displayPosition && idx < playerIndex
+            })
+            
+            const offsetX = (playersAtSamePos.length % 2 === 0 ? -1 : 1) * (BOARD_CELL_SIZE * 0.2)
+            const offsetY = Math.floor(playersAtSamePos.length / 2) * (BOARD_CELL_SIZE * 0.2)
+            const isCurrentPlayer = playerIndex === currentPlayerIndex
+            const playerSize = isCurrentPlayer ? 24 : 20
+            
+            // Calculate absolute position on board
+            const absoluteX = BOARD_PADDING + x * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2 + offsetX
+            const absoluteY = BOARD_PADDING + y * BOARD_CELL_SIZE + BOARD_CELL_SIZE / 2 + offsetY
+            
+            // Animation styles
+            let animationStyle = {}
+            let animationClass = ''
+            if (isAnimatingThisPlayer) {
+              if (animationType === 'climbing') {
+                animationClass = 'climb-ladder'
+                animationStyle = {
+                  animation: 'climb-ladder 0.8s ease-in-out',
+                }
+              } else if (animationType === 'sliding') {
+                animationClass = 'slide-snake'
+                animationStyle = {
+                  animation: 'slide-snake 0.8s ease-in-out',
+                }
+              } else {
+                animationClass = 'walk-step'
+                animationStyle = {
+                  animation: 'walk-step 0.3s ease-in-out',
+                }
+              }
+            }
             
             return (
-              <div
-                key={`players-${position}`}
-                className="absolute"
+              <svg
+                key={`player-${playerIndex}`}
+                className={`absolute transition-all duration-300 cursor-pointer player-icon ${animationClass}`}
                 style={{
-                  left: `${BOARD_PADDING + x * BOARD_CELL_SIZE}px`,
-                  top: `${BOARD_PADDING + y * BOARD_CELL_SIZE}px`,
-                  width: `${BOARD_CELL_SIZE}px`,
-                  height: `${BOARD_CELL_SIZE}px`,
-                  zIndex: 10,
-                  pointerEvents: 'none',
+                  left: `${absoluteX - playerSize / 2}px`,
+                  top: `${absoluteY - playerSize / 2}px`,
+                  width: `${playerSize}px`,
+                  height: `${playerSize}px`,
+                  zIndex: 50,
+                  pointerEvents: 'auto',
+                  transition: isAnimatingThisPlayer ? 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1), top 0.3s cubic-bezier(0.4, 0, 0.2, 1)' : 'all 0.3s ease',
+                  ...animationStyle,
+                  filter: isCurrentPlayer
+                    ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.9)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.5)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4))'
+                    : 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5))',
+                  animation: isAnimatingThisPlayer 
+                    ? undefined 
+                    : (isCurrentPlayer 
+                      ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
+                      : 'player-bounce 2s ease-in-out infinite'),
+                  transform: isAnimatingThisPlayer 
+                    ? animationStyle.transform 
+                    : (isCurrentPlayer ? 'scale(1.1)' : 'scale(1)'),
+                }}
+                title={player.name}
+                onMouseEnter={(e) => {
+                  if (!isCurrentPlayer && !isAnimatingThisPlayer) {
+                    e.currentTarget.style.animation = 'player-hover 0.5s ease-in-out infinite'
+                    e.currentTarget.style.transform = 'scale(1.15)'
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isCurrentPlayer && !isAnimatingThisPlayer) {
+                    e.currentTarget.style.animation = 'player-bounce 2s ease-in-out infinite'
+                    e.currentTarget.style.transform = 'scale(1)'
+                  }
                 }}
               >
-                {playersHere.map((player, playerIndex) => {
-                  const offsetX = (playerIndex % 2 === 0 ? -1 : 1) * (BOARD_CELL_SIZE * 0.2)
-                  const offsetY = Math.floor(playerIndex / 2) * (BOARD_CELL_SIZE * 0.2)
-                  const isCurrentPlayer = player.index === currentPlayerIndex
-                  const playerSize = isCurrentPlayer ? 24 : 20
-                  const centerX = BOARD_CELL_SIZE / 2 + offsetX
-                  const centerY = BOARD_CELL_SIZE / 2 + offsetY
-                  
-                  // Determine expression based on player state
+                {(() => {
                   const expression = isCurrentPlayer ? 'happy' : 'neutral'
                   
                   return (
-                    <svg
-                      key={`${player.index}-${position}`}
-                      className="absolute transition-all duration-300 cursor-pointer player-icon"
-                      style={{
-                        left: `${centerX - playerSize / 2}px`,
-                        top: `${centerY - playerSize / 2}px`,
-                        width: `${playerSize}px`,
-                        height: `${playerSize}px`,
-                        zIndex: 10,
-                        filter: isCurrentPlayer
-                          ? 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.9)) drop-shadow(0 0 20px rgba(251, 191, 36, 0.5)) drop-shadow(0 2px 8px rgba(0, 0, 0, 0.4))'
-                          : 'drop-shadow(0 2px 6px rgba(0, 0, 0, 0.4)) drop-shadow(0 0 4px rgba(255, 255, 255, 0.5))',
-                        animation: isCurrentPlayer 
-                          ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' 
-                          : 'player-bounce 2s ease-in-out infinite',
-                        transform: isCurrentPlayer ? 'scale(1.1)' : 'scale(1)',
-                      }}
-                      title={player.name}
-                      onMouseEnter={(e) => {
-                        if (!isCurrentPlayer) {
-                          e.currentTarget.style.animation = 'player-hover 0.5s ease-in-out infinite'
-                          e.currentTarget.style.transform = 'scale(1.15)'
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isCurrentPlayer) {
-                          e.currentTarget.style.animation = 'player-bounce 2s ease-in-out infinite'
-                          e.currentTarget.style.transform = 'scale(1)'
-                        }
-                      }}
-                    >
+                    <>
                       <defs>
                         {/* Player gradient */}
-                        <radialGradient id={`playerGradient-${player.index}-${position}`}>
+                        <radialGradient id={`playerGradient-${playerIndex}`}>
                           <stop offset="0%" stopColor={player.color} stopOpacity="1" />
                           <stop offset="70%" stopColor={player.color} stopOpacity="0.9" />
                           <stop offset="100%" stopColor={player.color} stopOpacity="0.7" />
@@ -896,7 +953,7 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
                         cx={playerSize / 2}
                         cy={playerSize / 2}
                         r={playerSize / 2 - 2}
-                        fill={`url(#playerGradient-${player.index}-${position})`}
+                        fill={`url(#playerGradient-${playerIndex})`}
                         stroke={isCurrentPlayer ? '#fbbf24' : '#ffffff'}
                         strokeWidth={isCurrentPlayer ? '3' : '2'}
                       />
@@ -1043,10 +1100,10 @@ const GameBoard = ({ players, currentPlayerIndex, winner }) => {
                           opacity="0.8"
                         />
                       )}
-                    </svg>
+                    </>
                   )
-                })}
-              </div>
+                })()}
+              </svg>
             )
           })}
         </div>

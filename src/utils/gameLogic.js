@@ -74,6 +74,19 @@ export const movePlayer = (currentPosition, diceValue) => {
   return { position: newPosition, type: 'move', snakeOrLadder: null }
 }
 
+// Generate path of positions from start to end (for animation)
+export const generateMovementPath = (startPosition, endPosition) => {
+  const path = []
+  if (startPosition === endPosition) return [startPosition]
+  
+  // Generate step-by-step path
+  for (let pos = startPosition; pos <= endPosition; pos++) {
+    path.push(pos)
+  }
+  
+  return path
+}
+
 // Roll dice
 export const rollDice = () => {
   return Math.floor(Math.random() * 6) + 1

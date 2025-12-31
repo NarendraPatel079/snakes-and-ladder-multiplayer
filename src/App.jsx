@@ -5,8 +5,8 @@ import PlayerSetup from './components/PlayerSetup'
 import GameBoard from './components/GameBoard'
 import Dice from './components/Dice'
 import GameStatus from './components/GameStatus'
-import { movePlayer, rollDice } from './utils/gameLogic'
-import { ICONS_MAP } from './constants/GameBoardConstants'
+import { movePlayer, rollDice, generateMovementPath } from './utils/gameLogic'
+import { ICONS_MAP, BOARD_SIZE } from './constants/GameBoardConstants'
 import { GAME_STATE } from './constants/PlayerConstants'
 
 function App() {
@@ -18,6 +18,9 @@ function App() {
   const [lastMove, setLastMove] = useState(null)
   const [winner, setWinner] = useState(null)
   const [extraTurn, setExtraTurn] = useState(false) // Track if player got a 6 and has extra turn
+  const [animatingPlayer, setAnimatingPlayer] = useState(null) // Track player being animated
+  const [animationPath, setAnimationPath] = useState([]) // Path for step-by-step animation
+  const [isAnimating, setIsAnimating] = useState(false) // Track if animation is in progress
 
   const handleStartGame = (gamePlayers) => {
     setPlayers(gamePlayers)
@@ -30,7 +33,7 @@ function App() {
   }
 
   const handleRollDice = () => {
-    if (isRolling || gameState !== GAME_STATE.playing) return
+    if (isRolling || gameState !== GAME_STATE.playing || isAnimating) return
 
     setIsRolling(true)
     setDiceValue(0)
@@ -46,40 +49,113 @@ function App() {
       setDiceValue(finalValue)
       setIsRolling(false)
 
-      // Move player
+      // Move player with animation
       const currentPlayer = players[currentPlayerIndex]
       const result = movePlayer(currentPlayer.position, finalValue)
-
-      const newPlayers = [...players]
-      newPlayers[currentPlayerIndex] = {
-        ...currentPlayer,
-        position: result.position,
+      
+      // Calculate movement path for animation
+      const startPos = currentPlayer.position
+      const intermediatePos = startPos + finalValue
+      const endPos = result.position
+      
+      // Generate path: start -> intermediate (dice roll) -> end (after snake/ladder if any)
+      const path = []
+      
+      // Step 1: Move from start to intermediate position (dice roll)
+      if (intermediatePos <= BOARD_SIZE) {
+        const stepPath = generateMovementPath(startPos, intermediatePos)
+        path.push(...stepPath.slice(1)) // Exclude start position
       }
-      setPlayers(newPlayers)
+      
+      // Step 2: If there's a snake or ladder, animate to final position
+      if (result.snakeOrLadder && intermediatePos !== endPos) {
+        path.push(endPos)
+      }
+      
+      // If no path (exceeded board), just update state without animation
+      if (path.length === 0) {
+        setLastMove({
+          player: currentPlayer,
+          diceValue: finalValue,
+          snakeOrLadder: result.snakeOrLadder,
+          type: result.type,
+        })
+        setIsRolling(false)
+        return
+      }
+      
+      // Start animation
+      setIsAnimating(true)
+      setAnimatingPlayer(currentPlayerIndex)
+      setAnimationPath([startPos]) // Start with current position
+      
+      // Animate step by step
+      let pathIndex = 0
+      const animateStep = () => {
+        if (pathIndex < path.length) {
+          // Update animation path to show current position
+          const currentPath = path.slice(0, pathIndex + 1)
+          setAnimationPath(currentPath)
+          
+          // Update player position
+          const newPlayers = [...players]
+          newPlayers[currentPlayerIndex] = {
+            ...currentPlayer,
+            position: path[pathIndex],
+          }
+          setPlayers(newPlayers)
+          
+          pathIndex++
+          
+          // Check if this is the last step
+          if (pathIndex >= path.length) {
+            // Final position reached - wait a bit for animation to complete
+            setTimeout(() => {
+              const finalPlayers = [...players]
+              finalPlayers[currentPlayerIndex] = {
+                ...currentPlayer,
+                position: endPos,
+              }
+              setPlayers(finalPlayers)
+              
+              setLastMove({
+                player: currentPlayer,
+                diceValue: finalValue,
+                snakeOrLadder: result.snakeOrLadder,
+                type: result.type,
+              })
 
-      setLastMove({
-        player: currentPlayer,
-        diceValue: finalValue,
-        snakeOrLadder: result.snakeOrLadder,
-        type: result.type,
-      })
-
-      // Check for win
-      if (result.type === 'win') {
-        setWinner(currentPlayer)
-        setGameState(GAME_STATE.finished)
-        setExtraTurn(false)
-      } else {
-        // Check if player rolled a 6 - they get an extra turn
-        if (finalValue === 6) {
-          setExtraTurn(true)
-          // Don't move to next player - same player gets another turn
-        } else {
-          // Move to next player only if not a 6
-          setExtraTurn(false)
-          setCurrentPlayerIndex((prev) => (prev + 1) % players.length)
+              // Check for win
+              if (result.type === 'win') {
+                setWinner(currentPlayer)
+                setGameState(GAME_STATE.finished)
+                setExtraTurn(false)
+              } else {
+                // Check if player rolled a 6 - they get an extra turn
+                if (finalValue === 6) {
+                  setExtraTurn(true)
+                  // Don't move to next player - same player gets another turn
+                } else {
+                  // Move to next player only if not a 6
+                  setExtraTurn(false)
+                  setCurrentPlayerIndex((prev) => (prev + 1) % players.length)
+                }
+              }
+              
+              // Reset animation state
+              setIsAnimating(false)
+              setAnimatingPlayer(null)
+              setAnimationPath([])
+            }, 400) // Wait for animation to complete
+          } else {
+            // Continue animation
+            setTimeout(animateStep, 300) // 300ms per step
+          }
         }
       }
+      
+      // Start animation after a short delay
+      setTimeout(animateStep, 200)
     }, 1500)
   }
 
@@ -121,6 +197,9 @@ function App() {
                   players={players}
                   currentPlayerIndex={currentPlayerIndex}
                   winner={winner}
+                  animatingPlayer={animatingPlayer}
+                  animationPath={animationPath}
+                  isAnimating={isAnimating}
                 />
               </div>
 
