@@ -20,13 +20,14 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
 
   return (
     <div className="space-y-4">
-      <div className="p-4 bg-gradient-to-r from-teal-400 to-teal-500 rounded-lg shadow-md">
-        <p className="text-white font-semibold text-lg">
+      <div className="p-4 border rounded-lg shadow-md bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-purple-200 dark:border-none dark:shadow-lg">
+        <p className="text-gray-900 dark:text-white font-semibold text-lg">
           Current Turn:{' '}
           <span
-            className="px-3 py-1 rounded-lg bg-white bg-opacity-20"
+            className="px-3 py-1 rounded-lg inline-flex items-center gap-2 bg-gray-50 border-2 border-gray-200 dark:border-none dark:bg-white dark:bg-opacity-10"
             style={{ color: players[currentPlayerIndex]?.color }}
           >
+            {players[currentPlayerIndex]?.isBot && <span>{`${ICONS_MAP.bot}`}</span>}
             {players[currentPlayerIndex]?.name}
           </span>
         </p>
@@ -42,8 +43,13 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
       {lastMove && lastDiceValue > 0 && (
         <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-semibold">{lastMove.player.name}</span> rolled
-            <span className="font-bold text-blue-600 dark:text-blue-400 px-1">
+            <span className="pr-1 font-semibold text-gray-900 dark:text-[#F4F3F5]">
+              Last Move:
+            </span>
+            <span className="font-semibold" style={lastMove?.player?.color ? { color: lastMove.player.color } : {}}>
+              {lastMove.player.name}
+            </span> rolled
+            <span className="font-bold text-teal-600 dark:text-teal-400 px-1">
               {lastDiceValue}
             </span>
             {lastMove.snakeOrLadder && (
@@ -78,7 +84,8 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
                 className="w-4 h-4 rounded-full"
                 style={{ backgroundColor: player.color }}
               />
-              <span className="font-semibold text-sm text-gray-900 dark:text-white">
+              <span className="font-semibold text-sm text-gray-900 dark:text-white flex items-center gap-1">
+                {player.isBot && <span className="text-xs">{`${ICONS_MAP.bot}`}</span>}
                 {player.name}
               </span>
             </div>
