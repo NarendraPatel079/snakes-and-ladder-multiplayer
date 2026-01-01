@@ -24,7 +24,7 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
         <p className="text-white font-semibold text-lg">
           Current Turn:{' '}
           <span
-            className="px-3 py-1 rounded-lg bg-white bg-opacity-20 inline-flex items-center gap-2"
+            className="px-3 py-1 rounded-lg inline-flex items-center gap-2 bg-white bg-opacity-20 dark:bg-opacity-10"
             style={{ color: players[currentPlayerIndex]?.color }}
           >
             {players[currentPlayerIndex]?.isBot && <span>{`${ICONS_MAP.bot}`}</span>}

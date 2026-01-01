@@ -74,6 +74,9 @@ function App() {
       
       // If no path (exceeded board), just update state without animation
       if (path.length === 0) {
+        if (result.type === 'exceed') {
+          setCurrentPlayerIndex((prev) => (prev + 1) % players.length);
+        }
         setLastMove({
           player: currentPlayer,
           diceValue: finalValue,

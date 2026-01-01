@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, useEffect } from 'react'
 import { getPositionCoords } from '../utils/gameLogic'
-import { BOARD_SIZE, BOARD_CELL_SIZE, BOARD_PADDING, ICONS_MAP, SNAKES, LADDERS } from '../constants/GameBoardConstants'
+import { BOARD_SIZE, BOARD_CELL_SIZE, BOARD_PADDING, ICONS_MAP, SNAKES, LADDERS, SNAKE_STYLES } from '../constants/GameBoardConstants'
 
 const GameBoard = ({ players, currentPlayerIndex, winner, animatingPlayer, animationPath, isAnimating }) => {
   const [hoveredCell, setHoveredCell] = useState(null)
@@ -156,20 +156,6 @@ const GameBoard = ({ players, currentPlayerIndex, winner, animatingPlayer, anima
       })
   }
 
-  // Snake color schemes and styles
-  const snakeStyles = [
-    { body: '#fbbf24', spots: '#f59e0b', expression: 'happy' }, // Yellow - happy
-    { body: '#a78bfa', spots: '#8b5cf6', expression: 'dizzy' }, // Purple - dizzy
-    { body: '#34d399', spots: '#10b981', expression: 'happy' }, // Green - happy
-    { body: '#ec4899', spots: '#db2777', expression: 'loving' }, // Pink - loving (darker, more vibrant)
-    { body: '#fbbf24', spots: '#f59e0b', expression: 'angry' }, // Yellow - angry
-    { body: '#f87171', spots: '#ef4444', expression: 'happy' }, // Red - happy
-    { body: '#60a5fa', spots: '#3b82f6', expression: 'happy' }, // Blue - happy
-    { body: '#fb923c', spots: '#f97316', expression: 'angry' }, // Orange - angry
-    { body: '#64748b', spots: '#475569', expression: 'happy' }, // Gray - happy (darker, more visible)
-    { body: '#fbbf24', spots: '#f59e0b', expression: 'happy' }, // Yellow - happy
-  ]
-
   // Calculate point on quadratic Bezier curve at parameter t (0 to 1)
   const getPointOnQuadraticCurve = (t, x0, y0, cx, cy, x1, y1) => {
     const mt = 1 - t
@@ -202,7 +188,7 @@ const GameBoard = ({ players, currentPlayerIndex, winner, animatingPlayer, anima
     // Create curved path for snake body
     const path = `M ${startX} ${startY} Q ${midX} ${midY} ${endX} ${endY}`
     
-    const style = snakeStyles[index % snakeStyles.length]
+    const style = SNAKE_STYLES[index % SNAKE_STYLES.length]
     const expression = style.expression
     
     // Calculate angle for head
