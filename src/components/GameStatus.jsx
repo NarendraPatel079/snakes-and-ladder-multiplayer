@@ -43,8 +43,13 @@ const GameStatus = ({ players, currentPlayerIndex, lastDiceValue, lastMove, winn
       {lastMove && lastDiceValue > 0 && (
         <div className="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg">
           <p className="text-gray-700 dark:text-gray-300">
-            <span className="font-semibold">{lastMove.player.name}</span> rolled
-            <span className="font-bold text-blue-600 dark:text-blue-400 px-1">
+            <span className="pr-1 font-bold text-[#F4F3F5]">
+              Last Move:
+            </span>
+            <span className="font-semibold" style={lastMove?.player?.color ? { color: lastMove.player.color } : {}}>
+              {lastMove.player.name}
+            </span> rolled
+            <span className="font-bold text-violet-600 dark:text-violet-400 px-1">
               {lastDiceValue}
             </span>
             {lastMove.snakeOrLadder && (
