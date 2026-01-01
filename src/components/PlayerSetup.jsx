@@ -16,32 +16,122 @@ const PlayerSetup = ({ onStartGame }) => {
     setPlayers(newPlayers)
   }
 
+  // Handle name field blur - update sequential numbering when user finishes editing
+  const handleNameBlur = (index) => {
+    const updatedPlayers = updateBotNames(players)
+    setPlayers(updatedPlayers)
+  }
+
+  // Helper function to get bot number for a player at given index
+  const getBotNumber = (playersList, playerIndex) => {
+    if (!playersList[playerIndex]?.isBot) return null
+    // Count how many bots come before this one (including this one)
+    let botCount = 0
+    for (let i = 0; i <= playerIndex && i < playersList.length; i++) {
+      if (playersList[i].isBot) {
+        botCount++
+      }
+    }
+    return botCount
+  }
+
+  // Helper function to get human player number for a player at given index
+  const getPlayerNumber = (playersList, playerIndex) => {
+    if (playersList[playerIndex]?.isBot) return null
+    // Count how many human players come before this one (including this one)
+    let playerCount = 0;
+    for (let i = 0; i <= playerIndex && i < playersList.length; i++) {
+      if (!playersList[i].isBot && isDefaultName(playersList[i].name)) {
+        playerCount++
+      }
+    }
+    return playerCount
+  }
+
+  // Helper function to check if a name is a default name (Player X or Bot X)
+  const isDefaultName = (name) => {
+    return /^(Player|Bot) \d+$/.test(name)
+  }
+
+  // Helper function to update bot and player names sequentially
+  const updateBotNames = (playersList) => {
+    return playersList.map((player, index) => {
+      if (player.isBot) {
+        const botNumber = getBotNumber(playersList, index)
+        return {
+          ...player,
+          name: `Bot ${botNumber}`
+        }
+      } else {
+        // Only update if it's a default name (Player X or Bot X)
+        // Preserve custom names entered by user
+        if (isDefaultName(player.name)) {
+          const playerNumber = getPlayerNumber(playersList, index)
+          return {
+            ...player,
+            name: `Player ${playerNumber}`
+          }
+        }
+        // Keep custom name if user provided one
+        return player
+      }
+    })
+  }
+
   const handleNumPlayersChange = (count) => {
     if (count < 2 || count > 6) return
     setNumPlayers(count)
     const newPlayers = []
     for (let i = 0; i < count; i++) {
-      newPlayers.push({
-        name: players[i]?.name || `Player ${i + 1}`,
-        color: players[i]?.color || PLAYER_COLORS[i],
-        isBot: players[i]?.isBot || false,
-      })
+      // Preserve existing player data or create new with default name
+      const existingPlayer = players[i]
+      if (existingPlayer) {
+        newPlayers.push({
+          name: existingPlayer.name,
+          color: existingPlayer.color,
+          isBot: existingPlayer.isBot,
+        })
+      } else {
+        // New player - will be numbered sequentially by updateBotNames
+        newPlayers.push({
+          name: `Player ${i + 1}`,
+          color: PLAYER_COLORS[i],
+          isBot: false,
+        })
+      }
     }
-    setPlayers(newPlayers)
+    // Update bot and player names sequentially
+    const updatedPlayers = updateBotNames(newPlayers)
+    setPlayers(updatedPlayers)
   }
 
   const handleToggleBot = (index) => {
     const newPlayers = [...players]
+    const currentPlayer = newPlayers[index]
+    const wouldBeBot = !currentPlayer.isBot
+    
+    // Check if this would result in all bots
+    const otherPlayers = newPlayers.filter((p, i) => i !== index && i < numPlayers)
+    const allOthersAreBots = otherPlayers.length > 0 && otherPlayers.every(p => p.isBot)
+    
+    // Prevent toggling to bot if all other players are already bots
+    if (wouldBeBot && allOthersAreBots) {
+      return // Don't allow this toggle
+    }
+    
+    // Toggle bot status
     newPlayers[index] = {
       ...newPlayers[index],
       isBot: !newPlayers[index].isBot,
-      // Auto-generate bot name if switching to bot
-      name: !newPlayers[index].isBot 
-        ? `Bot ${index + 1}` 
-        : `Player ${index + 1}`
     }
-    setPlayers(newPlayers)
+    
+    // Update all bot names sequentially
+    const updatedPlayers = updateBotNames(newPlayers)
+    setPlayers(updatedPlayers)
   }
+  
+  // Check if all players are bots
+  const allPlayersAreBots = players.slice(0, numPlayers).every(p => p.isBot)
 
   const handleEnableBotsToggle = () => {
     const newEnableBots = !enableBots
@@ -49,12 +139,19 @@ const PlayerSetup = ({ onStartGame }) => {
     
     // If disabling bots, remove bot flags from all players
     if (!newEnableBots) {
-      const newPlayers = players.map((p, i) => ({
+      const newPlayers = players.map((p) => ({
         ...p,
         isBot: false,
-        name: p.isBot ? `Player ${i + 1}` : p.name
+        // Update name if it was a bot name, otherwise preserve custom names
+        name: p.isBot && isDefaultName(p.name) ? `Player 1` : p.name
       }))
-      setPlayers(newPlayers)
+      // Update player names sequentially
+      const updatedPlayers = updateBotNames(newPlayers)
+      setPlayers(updatedPlayers)
+    } else {
+      // If enabling bots, update bot names sequentially
+      const updatedPlayers = updateBotNames(players)
+      setPlayers(updatedPlayers)
     }
   }
 
@@ -162,6 +259,7 @@ const PlayerSetup = ({ onStartGame }) => {
                   type="text"
                   value={player.name}
                   onChange={(e) => updatePlayer(index, 'name', e.target.value)}
+                  onBlur={() => handleNameBlur(index)}
                   disabled={player.isBot}
                   className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     player.isBot ? 'opacity-75 cursor-not-allowed' : ''
@@ -185,32 +283,62 @@ const PlayerSetup = ({ onStartGame }) => {
                   />
                 ))}
               </div>
-              {enableBots && (
-                <div className="flex-shrink-0">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={player.isBot}
-                      onChange={() => handleToggleBot(index)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
-                    <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Bot
-                    </span>
-                  </label>
-                </div>
-              )}
+              {enableBots && (() => {
+                // Check if toggling this player to bot would result in all bots
+                const otherPlayers = players.filter((p, i) => i !== index && i < numPlayers)
+                const allOthersAreBots = otherPlayers.length > 0 && otherPlayers.every(p => p.isBot)
+                const wouldMakeAllBots = !player.isBot && allOthersAreBots
+                
+                return (
+                  <div className="flex-shrink-0">
+                    <label className={`relative inline-flex items-center ${wouldMakeAllBots ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}>
+                      <input
+                        type="checkbox"
+                        checked={player.isBot}
+                        onChange={() => handleToggleBot(index)}
+                        disabled={wouldMakeAllBots}
+                        className="sr-only peer"
+                      />
+                      <div className={`w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600 ${wouldMakeAllBots ? 'opacity-50' : ''}`}></div>
+                      <span className="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Bot
+                      </span>
+                    </label>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         ))}
       </div>
 
+      {/* Warning message if all players are bots */}
+      {allPlayersAreBots && (
+        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-2 border-yellow-400 dark:border-yellow-600 rounded-lg">
+          <div className="flex items-start gap-3">
+            <span className="text-2xl">⚠️</span>
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-yellow-800 dark:text-yellow-200 mb-1">
+                At least one human player required
+              </p>
+              <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                You need at least one human player to start the game. Please disable bot mode for at least one player.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       <button
         onClick={handleStart}
-        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all transform hover:scale-[1.02] active:scale-[0.98]"
+        disabled={allPlayersAreBots}
+        className={`w-full py-3 text-white font-semibold rounded-lg shadow-md transition-all transform ${
+          allPlayersAreBots
+            ? 'bg-gray-400 dark:bg-gray-600 cursor-not-allowed opacity-50'
+            : 'bg-blue-600 hover:bg-blue-700 hover:shadow-lg hover:scale-[1.02] active:scale-[0.98]'
+        }`}
       >
-        Start Game
+        {allPlayersAreBots ? 'At least one human player required' : 'Start Game'}
       </button>
     </div>
   )
